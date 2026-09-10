@@ -1,0 +1,245 @@
+// ==========================================================================
+// BUILDIFY SOLUTIONS - PRODUCTION PRISMA RELATIONAL DATABASE SCHEMA
+// Designed for Enterprise Hardware, Component Inventory, Orders & Custom R&D
+// ==========================================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  RD_STAFF
+  INVENTORY_MANAGER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  QA_TESTING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum ServiceType {
+  CUSTOM_PCB_FABRICATION
+  THREE_D_PRINTING
+  FIRMWARE_DEVELOPMENT
+  RD_CONSULTATION
+}
+
+enum InquiryStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  QUOTED
+  APPROVED
+  IN_FABRICATION
+  COMPLETED
+}
+
+// --------------------------------------------------------------------------
+// 1. USER & AUTHENTICATION
+// --------------------------------------------------------------------------
+model User {
+  id              String                  @id @default(uuid())
+  email           String                  @unique
+  passwordHash    String
+  fullName        String
+  phone           String?
+  companyName     String?
+  role            Role                    @default(CUSTOMER)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  addresses       Address[]
+  orders          Order[]
+  wishlist        WishlistItem[]
+  serviceRequests CustomServiceInquiry[]
+
+  @@index([email])
+}
+
+model Address {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  street      String
+  city        String
+  state       String
+  postalCode  String
+  country     String   @default("Sri Lanka")
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// --------------------------------------------------------------------------
+// 2. HIERARCHICAL CATEGORIES & PRODUCTS
+// --------------------------------------------------------------------------
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  icon        String?
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  createdAt   DateTime   @default(now())
+
+  @@index([slug])
+}
+
+model Product {
+  id                  String                 @id @default(uuid())
+  sku                 String                 @unique
+  name                String
+  slug                String                 @unique
+  description         String
+  detailedOverview    String?
+  brand               String                 @default("Buildify")
+  priceUSD            Decimal                @db.Decimal(10, 2)
+  priceLKR            Decimal                @db.Decimal(10, 2)
+  originalPriceLKR    Decimal?               @db.Decimal(10, 2)
+  stockQuantity       Int                    @default(0)
+  lowStockThreshold   Int                    @default(5)
+  isAvailable         Boolean                @default(true)
+  imageUrl            String
+  datasheetUrl        String?
+  pinoutSummary       String?
+
+  // Faceted Technical Search Attributes
+  operatingVoltage    String?                // e.g. "3.3V", "5V", "3.3V - 5V", "12V"
+  packageType         String?                // e.g. "DIP", "SMD", "Module", "Breakout", "Chassis"
+  pinCount            Int?
+  interfaces          String?                // e.g. "I2C, SPI, UART"
+
+  categoryId          String
+  category            Category               @relation(fields: [categoryId], references: [id])
+  specifications      ProductSpecification[]
+  orderItems          OrderItem[]
+  wishlistItems       WishlistItem[]
+  stockMovements      StockMovement[]
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  @@index([sku])
+  @@index([slug])
+  @@index([categoryId])
+  @@index([brand])
+  @@index([operatingVoltage])
+  @@index([packageType])
+}
+
+model ProductSpecification {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  specKey   String   // e.g. "Processor", "Flash Memory", "Clock Speed"
+  specValue String   // e.g. "Tensilica Dual-Core 240MHz", "4MB SPI"
+
+  @@unique([productId, specKey])
+}
+
+// --------------------------------------------------------------------------
+// 3. ORDERS, CHECKOUT & TRACKING
+// --------------------------------------------------------------------------
+model Order {
+  id              String        @id @default(uuid())
+  orderNumber     String        @unique // e.g. "BF-892011"
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestEmail      String?
+  guestPhone      String?
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  paymentMethod   String        @default("CashOnDelivery") // "PayHere", "Card", "CashOnDelivery"
+  currency        String        @default("LKR")
+  subtotal        Decimal       @db.Decimal(10, 2)
+  tax             Decimal       @db.Decimal(10, 2)
+  shippingCost    Decimal       @db.Decimal(10, 2)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  courierName     String?       @default("Pronto / Domex")
+  trackingNumber  String?
+  deliveryNotes   String?
+  items           OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([orderNumber])
+  @@index([userId])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  totalPrice  Decimal  @db.Decimal(10, 2)
+}
+
+// --------------------------------------------------------------------------
+// 4. CUSTOM SERVICES & R&D INQUIRIES (PCB, 3D Print, Consulting)
+// --------------------------------------------------------------------------
+model CustomServiceInquiry {
+  id             String        @id @default(uuid())
+  inquiryCode    String        @unique // e.g. "PCB-2026-0042"
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  clientName     String
+  clientEmail    String
+  clientPhone    String
+  serviceType    ServiceType
+  projectTitle   String
+  specifications Json          // Flexible JSON storing PCB layers, Gerber URLs, STL specs, infill, quantities
+  fileUploadUrl  String?       // Cloud storage URL for Gerber zip / STL 3D model
+  estimatedCost  Decimal?      @db.Decimal(10, 2)
+  status         InquiryStatus @default(SUBMITTED)
+  adminRemarks   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([inquiryCode])
+  @@index([serviceType])
+}
+
+// --------------------------------------------------------------------------
+// 5. INVENTORY MOVEMENTS & WISHLIST
+// --------------------------------------------------------------------------
+model StockMovement {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity    Int      // Positive for restock, negative for order fulfillment
+  reason      String   // e.g. "Order Fulfillment #BF-892011", "Bulk Shipment Received"
+  createdAt   DateTime @default(now())
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
