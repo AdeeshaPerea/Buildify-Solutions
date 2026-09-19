@@ -4,6 +4,7 @@ import Logo from './components/Logo';
 import { ArrowLeft, Sparkles, Cpu, Code2, Phone, Mail, Building2, Wrench } from 'lucide-react';
 
 import WebDevelopmentPage from './components/WebDevelopmentPage';
+import IoTPage from './components/IoTPage';
 
 export default function App() {
   const [activePortal, setActivePortal] = useState('gateway'); // 'gateway' | 'iot' | 'web'
@@ -20,7 +21,7 @@ export default function App() {
   const handlePortalChoice = (choice) => {
     if (choice === 'iot') {
       setActivePortal('iot');
-      showToast('⚡ Welcome to Buildify IoT & Hardware! Ready to rebuild according to your requirements.', 'success');
+      showToast('⚡ Welcome to Buildify IoT & Hardware Store!', 'success');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (choice === 'web') {
       setActivePortal('web');
@@ -62,67 +63,18 @@ export default function App() {
         />
       )}
 
-      {/* 2. IOT HARDWARE SECTION (CLEAN SLATE READY TO REBUILD) */}
+      {/* 2. IOT HARDWARE SECTION (AMBER CIRCUIT THEME & MAKER STORE) */}
       {activePortal === 'iot' && (
-        <div className="portal-canvas portal-iot-canvas" style={{ minHeight: '100vh', background: '#08090d', color: '#fff', padding: '2rem 1.5rem' }}>
-          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem', borderBottom: '1px solid rgba(255, 107, 0, 0.2)', paddingBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <Logo size="small" showTagline={true} />
-              <div style={{ background: 'rgba(255, 107, 0, 0.15)', border: '1px solid rgba(255, 107, 0, 0.35)', color: '#ff851b', padding: '4px 12px', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 800 }}>
-                ⚡ IOT & HARDWARE STORE (READY TO REBUILD)
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <button 
-                onClick={() => setActivePortal('web')}
-                style={{
-                  background: 'rgba(56, 189, 248, 0.12)',
-                  border: '1px solid rgba(56, 189, 248, 0.35)',
-                  color: '#38bdf8',
-                  padding: '6px 16px',
-                  borderRadius: '999px',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                💻 Switch to Web
-              </button>
-
-              <button 
-                onClick={() => setActivePortal('gateway')}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.18)',
-                  color: '#fff',
-                  padding: '6px 16px',
-                  borderRadius: '999px',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <ArrowLeft size={14} /> Back to Gateway
-              </button>
-            </div>
-          </header>
-
-          <main style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center', padding: '4rem 1rem' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(255, 107, 0, 0.15)', border: '1px solid rgba(255, 107, 0, 0.35)', color: '#ff851b', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-              <Cpu size={38} />
-            </div>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '1rem' }}>
-              Clean Slate: <span style={{ color: '#ff851b' }}>IoT Hardware & Duino.lk Rebuild</span>
-            </h1>
-            <p style={{ color: 'rgba(255, 255, 255, 0.65)', maxWidth: '640px', margin: '0 auto 2rem', lineHeight: 1.6 }}>
-              All old pages have been cleared. Tell me how you want to build this IoT section step-by-step, including store categories, product layout, and the massive custom contracts section.
-            </p>
-          </main>
-        </div>
+        <IoTPage 
+          onBackToGateway={() => {
+            setActivePortal('gateway');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onSwitchToWeb={() => {
+            setActivePortal('web');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
       )}
 
       {/* 3. WEB DEVELOPMENT SECTION (REBUILT WITH CYBER BLUE & CIRCUIT THEME) */}

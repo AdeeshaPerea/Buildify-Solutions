@@ -221,7 +221,7 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
       {/* Agency Header / Navbar (Matching Reference Style with Buildify Cyber Blue) */}
       <header className="web-agency-header">
         <div className="web-header-container">
-          <div className="web-header-brand" onClick={onBackToGateway} title="Return to Gateway" role="button" tabIndex={0}>
+          <div className="web-header-brand">
             <Logo size="small" showTagline={true} />
           </div>
 
@@ -249,15 +249,6 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
             >
               <i className="bi bi-whatsapp"></i>
               <span>Let's Talk</span>
-            </button>
-
-            <button 
-              className="web-back-gateway-btn"
-              onClick={onBackToGateway}
-              title="Return to Welcome Portal"
-            >
-              <ArrowLeft size={14} />
-              <span>Gateway</span>
             </button>
           </div>
         </div>
@@ -1145,13 +1136,9 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
           </div>
         </div>
 
-        {/* Sub-strip for copyright & return */}
+        {/* Sub-strip for copyright */}
         <div className="web-footer-sub-strip">
           <span>&copy; {new Date().getFullYear()} Buildify Solutions. Full-Stack Web Applications & Smart Telemetry Systems.</span>
-          <button className="footer-gateway-return" onClick={onBackToGateway} type="button">
-            <ArrowLeft size={13} />
-            <span>Return to Gateway Page</span>
-          </button>
         </div>
       </footer>
     </div>

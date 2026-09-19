@@ -7,11 +7,11 @@ export const BUILDIFY_DATA = {
     subtitle: "Web Development • Embedded Systems • IoT & Robotics • Digital Solutions",
     description: "Your premier destination for IoT hardware, microcontrollers (ESP32, Arduino, Raspberry Pi), sensors, robotics, STEM maker kits, 3D printing gear, and turn-key custom engineering.",
     founder: "Buildify Solutions",
-    email: "buildifysolution@gmail.com",
+    email: "buildifysoluition@gmail.com",
     phone: "071 7790035",
     internationalPhone: "+94 71 7790035",
     website: "buildifysolutions.lk",
-    location: "Sri Lanka",
+    location: "Wewalduwa, Tyre Junction, Kelaniya, Sri Lanka",
     workingHours: "Mon - Sat: 8:30 AM - 7:00 PM (IST)",
     exchangeRateLKR: 310.0, // 1 USD = 310 LKR
     stats: [
