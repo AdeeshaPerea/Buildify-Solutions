@@ -193,35 +193,99 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
 
   return (
     <div className="web-agency-page">
-      {/* Background Ambient Circuit Grid & Glow */}
-      <div className="web-circuit-ambient">
-        <div className="web-circuit-glow-1"></div>
-        <div className="web-circuit-glow-2"></div>
-        <svg className="web-circuit-traces-svg" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="traceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.05" />
-            </linearGradient>
-            <linearGradient id="pulseCyan" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#ffffff" />
-            </linearGradient>
-          </defs>
-          <path d="M 50 120 L 320 120 L 400 200 L 950 200 L 1050 300 L 1400 300" stroke="url(#traceGrad)" strokeWidth="1.5" fill="none" />
-          <path d="M 120 450 L 500 450 L 580 530 L 1100 530 L 1200 630 L 1600 630" stroke="url(#traceGrad)" strokeWidth="1.5" fill="none" />
-          <path d="M 800 80 L 1100 80 L 1180 160 L 1500 160" stroke="url(#traceGrad)" strokeWidth="1.5" fill="none" />
-          <circle cx="400" cy="200" r="3.5" fill="#38bdf8" />
-          <circle cx="1050" cy="300" r="3.5" fill="#38bdf8" />
-          <circle cx="580" cy="530" r="3.5" fill="#38bdf8" />
-          <circle cx="1180" cy="160" r="3.5" fill="#38bdf8" />
-        </svg>
+      {/* Authentic Gateway Web Background Animation (Zero Circuit Design) */}
+      <div className="web-gateway-bg-ambient">
+        {/* Gateway Ambient Glow & Dot Matrix Grid */}
+        <div className="web-gateway-ambient-glow"></div>
+        <div className="territory-grid-pattern web-grid"></div>
+
+        {/* Dynamic Animated Drifting Cloud System & Telemetry Data Streams from Gateway Page */}
+        <div className="territory-cloud-canvas web-page-cloud-canvas" aria-hidden="true">
+          {/* Layer 1: Background Atmospheric Clouds */}
+          <div className="cloud-drift-layer cloud-layer-back">
+            <svg className="cloud-svg-shape cloud-back-1" viewBox="0 0 320 160">
+              <path d="M 45 120 A 30 30 0 0 1 75 75 A 55 55 0 0 1 170 55 A 48 48 0 0 1 245 85 A 35 35 0 0 1 285 120 A 24 24 0 0 1 265 145 H 65 A 24 24 0 0 1 45 120 Z" />
+            </svg>
+            <svg className="cloud-svg-shape cloud-back-2" viewBox="0 0 260 130">
+              <path d="M 35 95 A 25 25 0 0 1 60 60 A 45 45 0 0 1 140 45 A 40 40 0 0 1 200 70 A 30 30 0 0 1 235 95 A 20 20 0 0 1 220 118 H 50 A 20 20 0 0 1 35 95 Z" />
+            </svg>
+            <svg className="cloud-svg-shape cloud-back-3" viewBox="0 0 320 160">
+              <path d="M 45 120 A 30 30 0 0 1 75 75 A 55 55 0 0 1 170 55 A 48 48 0 0 1 245 85 A 35 35 0 0 1 285 120 A 24 24 0 0 1 265 145 H 65 A 24 24 0 0 1 45 120 Z" />
+            </svg>
+            <svg className="cloud-svg-shape cloud-back-4" viewBox="0 0 260 130">
+              <path d="M 35 95 A 25 25 0 0 1 60 60 A 45 45 0 0 1 140 45 A 40 40 0 0 1 200 70 A 30 30 0 0 1 235 95 A 20 20 0 0 1 220 118 H 50 A 20 20 0 0 1 35 95 Z" />
+            </svg>
+          </div>
+
+          {/* Layer 2: Foreground Glowing Clouds */}
+          <div className="cloud-drift-layer cloud-layer-front">
+            <svg className="cloud-svg-shape cloud-front-1" viewBox="0 0 380 190">
+              <path d="M 50 145 A 36 36 0 0 1 85 90 A 65 65 0 0 1 200 65 A 58 58 0 0 1 290 100 A 42 42 0 0 1 340 145 A 30 30 0 0 1 315 175 H 75 A 30 30 0 0 1 50 145 Z" />
+            </svg>
+            <svg className="cloud-svg-shape cloud-front-2" viewBox="0 0 290 150">
+              <path d="M 40 115 A 30 30 0 0 1 70 70 A 50 50 0 0 1 160 50 A 45 45 0 0 1 225 80 A 35 35 0 0 1 260 115 A 24 24 0 0 1 240 138 H 60 A 24 24 0 0 1 40 115 Z" />
+            </svg>
+            <svg className="cloud-svg-shape cloud-front-3" viewBox="0 0 380 190">
+              <path d="M 50 145 A 36 36 0 0 1 85 90 A 65 65 0 0 1 200 65 A 58 58 0 0 1 290 100 A 42 42 0 0 1 340 145 A 30 30 0 0 1 315 175 H 75 A 30 30 0 0 1 50 145 Z" />
+            </svg>
+            <svg className="cloud-svg-shape cloud-front-4" viewBox="0 0 290 150">
+              <path d="M 40 115 A 30 30 0 0 1 70 70 A 50 50 0 0 1 160 50 A 45 45 0 0 1 225 80 A 35 35 0 0 1 260 115 A 24 24 0 0 1 240 138 H 60 A 24 24 0 0 1 40 115 Z" />
+            </svg>
+          </div>
+
+          {/* Connected Cloud Telemetry Network Node Arcs */}
+          <svg className="cloud-network-svg" viewBox="0 0 1000 700" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="cloudDataGradWeb" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.1" />
+                <stop offset="60%" stopColor="#0ea5e9" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
+              </linearGradient>
+            </defs>
+            <g stroke="rgba(56, 189, 248, 0.28)" strokeWidth="1.3" strokeDasharray="4 6" fill="none">
+              <path d="M 80 540 Q 220 320 380 290" />
+              <path d="M 380 290 Q 520 250 680 310" />
+              <path d="M 680 310 Q 820 370 940 280" />
+              <path d="M 220 620 Q 360 480 510 430" />
+              <path d="M 510 430 Q 660 380 830 450" />
+              <path d="M 120 220 Q 320 150 540 210" />
+              <path d="M 540 210 Q 750 260 920 180" />
+            </g>
+            <circle cx="380" cy="290" r="4.5" fill="#38bdf8" className="cloud-node node-pulse-1" />
+            <circle cx="680" cy="310" r="4" fill="#7dd3fc" className="cloud-node node-pulse-2" />
+            <circle cx="510" cy="430" r="5" fill="#38bdf8" className="cloud-node node-pulse-3" />
+            <circle cx="540" cy="210" r="4" fill="#38bdf8" className="cloud-node node-pulse-2" />
+            <circle cx="830" cy="450" r="4.5" fill="#7dd3fc" className="cloud-node node-pulse-1" />
+            <circle cx="940" cy="280" r="4" fill="#38bdf8" className="cloud-node node-pulse-3" />
+          </svg>
+
+          {/* Rising Real-Time Cloud Telemetry Data Stream Packets */}
+          <div className="cloud-data-stream-container">
+            <span className="cloud-data-packet packet-p1"></span>
+            <span className="cloud-data-packet packet-p2"></span>
+            <span className="cloud-data-packet packet-p3"></span>
+            <span className="cloud-data-packet packet-p4"></span>
+            <span className="cloud-data-packet packet-p5"></span>
+            <span className="cloud-data-packet packet-p6"></span>
+            <span className="cloud-data-packet packet-p7"></span>
+            <span className="cloud-data-packet packet-p8"></span>
+            <span className="cloud-data-packet packet-p9"></span>
+            <span className="cloud-data-packet packet-p10"></span>
+            <span className="cloud-data-packet packet-p11"></span>
+            <span className="cloud-data-packet packet-p12"></span>
+          </div>
+        </div>
       </div>
 
       {/* Agency Header / Navbar (Matching Reference Style with Buildify Cyber Blue) */}
       <header className="web-agency-header">
         <div className="web-header-container">
-          <div className="web-header-brand">
+          <div 
+            className="web-header-brand" 
+            onClick={onBackToGateway} 
+            style={{ cursor: 'pointer' }}
+            title="Return to Buildify Gateway"
+          >
             <Logo size="small" showTagline={true} />
           </div>
 

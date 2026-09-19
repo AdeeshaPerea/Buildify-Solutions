@@ -453,21 +453,79 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb }) {
 
   return (
     <div className="iot-platform-page">
-      {/* Amber Circuit Background Ambient */}
+      {/* Amber Circuit Background Ambient & Cyber Cloud Atmosphere */}
       <div className="iot-circuit-ambient">
+        {/* Animated Cyber Cloud Atmosphere (Solar Amber) */}
+        <div className="cyber-cloud-backdrop iot-cloud-backdrop">
+          <div className="cloud-puff cloud-amber-1"></div>
+          <div className="cloud-puff cloud-amber-2"></div>
+          <div className="cloud-puff cloud-amber-3"></div>
+          <div className="cloud-puff cloud-amber-4"></div>
+          <div className="cloud-puff cloud-amber-5"></div>
+          <div className="cloud-mist-stream stream-amber-1"></div>
+          <div className="cloud-mist-stream stream-amber-2"></div>
+        </div>
+
+        <div className="iot-matrix-grid"></div>
         <div className="iot-glow-spot spot-1"></div>
         <div className="iot-glow-spot spot-2"></div>
+        <div className="iot-glow-spot spot-3"></div>
         <svg className="iot-traces-svg" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="amberTraceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ff851b" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#ff4500" stopOpacity="0.05" />
+              <stop offset="0%" stopColor="#ff851b" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#ff4500" stopOpacity="0.08" />
             </linearGradient>
+            <linearGradient id="pulseAmberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ff851b" />
+              <stop offset="50%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#ffaa00" />
+            </linearGradient>
+            <filter id="glowAmber" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
-          <path d="M 0 140 H 260 L 320 200 H 680 L 740 140 H 1200" stroke="url(#amberTraceGrad)" strokeWidth="1.5" fill="none" />
-          <path d="M 180 0 V 180 L 240 240 H 840 L 900 300 V 700" stroke="url(#amberTraceGrad)" strokeWidth="1.5" fill="none" />
-          <path d="M 400 800 L 460 740 H 960 L 1020 800 H 1600" stroke="url(#amberTraceGrad)" strokeWidth="1.5" fill="none" />
+          {/* Static Traces */}
+          <path d="M 0 140 H 260 L 320 200 H 680 L 740 140 H 1600" stroke="url(#amberTraceGrad)" strokeWidth="1.5" fill="none" />
+          <path d="M 180 0 V 180 L 240 240 H 840 L 900 300 V 900" stroke="url(#amberTraceGrad)" strokeWidth="1.5" fill="none" />
+          <path d="M 400 800 L 460 740 H 960 L 1020 800 H 1800" stroke="url(#amberTraceGrad)" strokeWidth="1.5" fill="none" />
+          <path d="M 100 500 L 350 500 L 410 560 H 1150 L 1210 500 H 1700" stroke="url(#amberTraceGrad)" strokeWidth="1.5" fill="none" />
+
+          {/* Animated Laser Pulse Beams Shooting Along The Traces */}
+          <path d="M 0 140 H 260 L 320 200 H 680 L 740 140 H 1600" stroke="url(#pulseAmberGrad)" strokeWidth="2.5" fill="none" filter="url(#glowAmber)" className="laser-pulse-run-amber pulse-fast" />
+          <path d="M 180 0 V 180 L 240 240 H 840 L 900 300 V 900" stroke="url(#pulseAmberGrad)" strokeWidth="2.5" fill="none" filter="url(#glowAmber)" className="laser-pulse-run-amber pulse-medium" />
+          <path d="M 400 800 L 460 740 H 960 L 1020 800 H 1800" stroke="url(#pulseAmberGrad)" strokeWidth="2.5" fill="none" filter="url(#glowAmber)" className="laser-pulse-run-amber pulse-slow" />
+          <path d="M 100 500 L 350 500 L 410 560 H 1150 L 1210 500 H 1700" stroke="url(#pulseAmberGrad)" strokeWidth="2.5" fill="none" filter="url(#glowAmber)" className="laser-pulse-run-amber pulse-reverse" />
+
+          {/* Glowing Junction Nodes with Shockwaves */}
+          <g className="pulsing-node" transform="translate(320, 200)">
+            <circle cx="0" cy="0" r="8" fill="rgba(255, 133, 27, 0.25)" className="node-shockwave" />
+            <circle cx="0" cy="0" r="4" fill="#ff851b" />
+          </g>
+          <g className="pulsing-node" transform="translate(740, 140)">
+            <circle cx="0" cy="0" r="8" fill="rgba(255, 133, 27, 0.25)" className="node-shockwave delay-1" />
+            <circle cx="0" cy="0" r="4" fill="#ff851b" />
+          </g>
+          <g className="pulsing-node" transform="translate(900, 300)">
+            <circle cx="0" cy="0" r="8" fill="rgba(255, 133, 27, 0.25)" className="node-shockwave delay-2" />
+            <circle cx="0" cy="0" r="4" fill="#ff851b" />
+          </g>
+          <g className="pulsing-node" transform="translate(1020, 800)">
+            <circle cx="0" cy="0" r="8" fill="rgba(255, 133, 27, 0.25)" className="node-shockwave delay-3" />
+            <circle cx="0" cy="0" r="4" fill="#ff851b" />
+          </g>
         </svg>
+
+        {/* Ambient Floating Digital Particles */}
+        <div className="cyber-particles-field">
+          <span className="c-particle-amber p1"></span>
+          <span className="c-particle-amber p2"></span>
+          <span className="c-particle-amber p3"></span>
+          <span className="c-particle-amber p4"></span>
+          <span className="c-particle-amber p5"></span>
+          <span className="c-particle-amber p6"></span>
+        </div>
       </div>
 
       {/* Express 24-Hour Islandwide Delivery Top Banner */}
@@ -492,7 +550,12 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb }) {
       <header className="iot-main-nav-bar">
         <div className="iot-nav-container">
           <div className="iot-nav-brand-group">
-            <div className="iot-brand-wrap" onClick={() => setActiveTab('store')} style={{ cursor: 'pointer' }}>
+            <div 
+              className="iot-brand-wrap" 
+              onClick={onBackToGateway} 
+              style={{ cursor: 'pointer' }}
+              title="Return to Buildify Gateway"
+            >
               <Logo size="small" showTagline={true} />
             </div>
           </div>
@@ -837,16 +900,15 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb }) {
 
                       return (
                         <div key={product.id} className="hardware-item-card">
-                          <div className="card-top-badges">
-                            {hasDiscount ? (
-                              <span className="badge-discount">-{discountPct}%</span>
-                            ) : (
-                              <span className="badge-voltage">{product.operatingVoltage}</span>
-                            )}
-                            <span className="badge-brand">{product.brand}</span>
-                          </div>
-
                           <div className="card-img-container" onClick={() => setActiveModalProduct(product)}>
+                            <div className="card-top-badges">
+                              {hasDiscount ? (
+                                <span className="badge-discount">-{discountPct}%</span>
+                              ) : (
+                                <span className="badge-voltage">{product.operatingVoltage}</span>
+                              )}
+                              <span className="badge-brand">{product.brand}</span>
+                            </div>
                             <img src={product.image} alt={product.name} className="product-image" />
                             <div className="img-hover-overlay">
                               <span className="quick-view-btn">
@@ -914,37 +976,116 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb }) {
         <main className="iot-about-view">
           {/* Top Retail & Engineering Mission Identity */}
           <section className="about-identity-hero">
+            <div className="hero-ambient-glow"></div>
             <div className="section-container">
               <div className="about-intro-badge">
-                <Radio size={14} /> Sri Lanka's Premier Maker Hardware Store & IoT Lab
+                <span className="live-radar-dot"></span>
+                <Radio size={14} />
+                <span>Sri Lanka's Premier Maker Hardware Store & IoT Lab</span>
               </div>
+
               <h1 className="about-main-title">
                 Who We Are & What We Do
               </h1>
+
               <p className="about-main-lead">
-                Buildify Solutions is your one-stop destination for genuine robotics hardware, precision sensors, microcontrollers, and turnkey embedded engineering in Sri Lanka.
+                <strong>Buildify Solutions</strong> is your one-stop destination for genuine robotics hardware, precision sensors, microcontrollers, and turnkey embedded engineering in Sri Lanka.
               </p>
 
               <div className="about-pillars-overview-grid">
-                <div className="about-overview-card">
-                  <div className="card-top-icon"><Box size={24} /></div>
-                  <h3>Genuine Hardware Store</h3>
-                  <p>We stock and retail over 2,500+ genuine electronic modules, ESP32, Arduino, Raspberry Pi, LoRaWAN radios, power modules, and precision sensors with same-day dispatch and 24-hour delivery.</p>
-                  <span className="overview-tag">2,500+ SKUs in Stock</span>
+                {/* Pillar 1: Genuine Hardware Store */}
+                <div className="about-overview-card card-hardware">
+                  <div className="card-ambient-corner"></div>
+                  <div className="card-top-row">
+                    <div className="card-top-icon icon-amber">
+                      <Box size={26} />
+                    </div>
+                    <span className="overview-tag tag-amber">
+                      <span className="live-mini-dot"></span> 2,500+ SKUs in Stock
+                    </span>
+                  </div>
+
+                  <h3 className="card-pillar-title">Genuine Hardware Store</h3>
+                  <p className="card-pillar-desc">
+                    We stock and retail over 2,500+ genuine electronic modules, ESP32, Arduino, Raspberry Pi, LoRaWAN radios, power modules, and precision sensors with same-day dispatch and 24-hour delivery.
+                  </p>
+
+                  <div className="card-chips-row">
+                    <span className="micro-chip">ESP32 & Arduino</span>
+                    <span className="micro-chip">Sensors & Modules</span>
+                    <span className="micro-chip highlight">24H Dispatch</span>
+                  </div>
                 </div>
 
-                <div className="about-overview-card">
-                  <div className="card-top-icon"><Cpu size={24} /></div>
-                  <h3>Embedded Firmware Engineering</h3>
-                  <p>From student STEM prototypes to mission-critical industrial controllers, our engineering lab writes production-grade C/C++ firmware using ESP-IDF, FreeRTOS, and Zephyr.</p>
-                  <span className="overview-tag">ESP-IDF & FreeRTOS</span>
+                {/* Pillar 2: Embedded Firmware Engineering */}
+                <div className="about-overview-card card-firmware">
+                  <div className="card-ambient-corner"></div>
+                  <div className="card-top-row">
+                    <div className="card-top-icon icon-cyan">
+                      <Cpu size={26} />
+                    </div>
+                    <span className="overview-tag tag-cyan">
+                      <Zap size={12} /> ESP-IDF & FreeRTOS
+                    </span>
+                  </div>
+
+                  <h3 className="card-pillar-title">Embedded Firmware Engineering</h3>
+                  <p className="card-pillar-desc">
+                    From student STEM prototypes to mission-critical industrial controllers, our engineering lab writes production-grade C/C++ firmware using ESP-IDF, FreeRTOS, and Zephyr.
+                  </p>
+
+                  <div className="card-chips-row">
+                    <span className="micro-chip">Bare-Metal C/C++</span>
+                    <span className="micro-chip">Zero-Crash RTOS</span>
+                    <span className="micro-chip highlight-cyan">Industrial PLC</span>
+                  </div>
                 </div>
 
-                <div className="about-overview-card">
-                  <div className="card-top-icon"><Layers size={24} /></div>
-                  <h3>Telemetry & IoT Dashboards</h3>
-                  <p>We bridge physical hardware to the cloud with real-time MQTT pipelines, LoRaWAN gateways, and custom telemetry web dashboards for agribusiness, factories, and smart energy.</p>
-                  <span className="overview-tag">MQTT & LoRaWAN</span>
+                {/* Pillar 3: Telemetry & IoT Dashboards */}
+                <div className="about-overview-card card-telemetry">
+                  <div className="card-ambient-corner"></div>
+                  <div className="card-top-row">
+                    <div className="card-top-icon icon-green">
+                      <Layers size={26} />
+                    </div>
+                    <span className="overview-tag tag-green">
+                      <Activity size={12} /> MQTT & LoRaWAN
+                    </span>
+                  </div>
+
+                  <h3 className="card-pillar-title">Telemetry & IoT Dashboards</h3>
+                  <p className="card-pillar-desc">
+                    We bridge physical hardware to the cloud with real-time MQTT pipelines, LoRaWAN gateways, and custom telemetry web dashboards for agribusiness, factories, and smart energy.
+                  </p>
+
+                  <div className="card-chips-row">
+                    <span className="micro-chip">Cloud Telemetry</span>
+                    <span className="micro-chip">Live WebSockets</span>
+                    <span className="micro-chip highlight-green">Agri & SCADA</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Quick Trust Ribbon */}
+              <div className="about-trust-strip">
+                <div className="trust-strip-item">
+                  <Truck size={15} className="text-amber" />
+                  <span>24h Islandwide Dispatch</span>
+                </div>
+                <span className="trust-strip-sep">•</span>
+                <div className="trust-strip-item">
+                  <ShieldCheck size={15} className="text-green" />
+                  <span>100% Genuine Silicon Guarantee</span>
+                </div>
+                <span className="trust-strip-sep">•</span>
+                <div className="trust-strip-item">
+                  <Wrench size={15} className="text-amber" />
+                  <span>In-House Lab Bench Tested</span>
+                </div>
+                <span className="trust-strip-sep">•</span>
+                <div className="trust-strip-item">
+                  <Zap size={15} className="text-cyan" />
+                  <span>1-Hour Colombo Quick Delivery</span>
                 </div>
               </div>
             </div>
