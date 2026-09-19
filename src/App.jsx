@@ -14,15 +14,22 @@ import ProjectModal from './components/ProjectModal';
 import TutorialModal from './components/TutorialModal';
 import DatasheetModal from './components/DatasheetModal';
 import CheckoutModal from './components/CheckoutModal';
+import MascotWelcomeModal from './components/MascotWelcomeModal';
+import FloatingMascotBtn from './components/FloatingMascotBtn';
+import WebSolutionsSection from './components/WebSolutionsSection';
+import GatewayPage from './components/GatewayPage';
 import Footer from './components/Footer';
 import { Info, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('store');
+  const [activeTab, setActiveTab] = useState('gateway');
   const [activeStoreCat, setActiveStoreCat] = useState('all');
   const [activeProjCat, setActiveProjCat] = useState('all');
   const [activeLearnCat, setActiveLearnCat] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // 3D Mascot Welcome Screen (First Page Open Gatekeeper - Gateway is primary)
+  const [showMascotModal, setShowMascotModal] = useState(false);
 
   // Currency State (Default to LKR)
   const [currency, setCurrency] = useState(() => {
@@ -96,6 +103,23 @@ export default function App() {
     if (tab === 'projects' && subCat) setActiveProjCat(subCat);
     if (tab === 'learn' && subCat) setActiveLearnCat(subCat);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleMascotChoice = (choice) => {
+    setShowMascotModal(false);
+    if (choice === 'iot') {
+      setActiveTab('store');
+      setActiveStoreCat('all');
+      showToast('👷‍♂️ Buildy: Welcome to our IoT Products & Hardware Store! Explore ESP32, Arduino & Sensors.', 'success');
+      setTimeout(() => {
+        const el = document.querySelector('.store-view-section') || document.querySelector('main');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    } else if (choice === 'web') {
+      setActiveTab('webSolutions');
+      showToast('👷‍♂️ Buildy: Welcome to our Web & Digital Solutions Studio! Explore Web Development & Cloud Dashboards.', 'success');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleToggleCurrency = () => {
@@ -193,7 +217,7 @@ export default function App() {
   const handleScheduleConsultation = () => {
     setActiveTab('about');
     setContactSubject('R&D & Firmware Consultation Booking');
-    setContactMessage('Hello Daham & Buildify Engineering Team,\n\nI would like to schedule an embedded systems consultation for a custom telemetry / PCB hardware build.');
+    setContactMessage('Hello Buildify Solutions Engineering Team,\n\nI would like to schedule an embedded systems consultation for a custom telemetry / PCB hardware build.');
     setTimeout(() => {
       const el = document.getElementById('contactFormWrap');
       if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -210,19 +234,30 @@ export default function App() {
     <div className="buildify-app">
       <div className="ambient-grid"></div>
 
-      <Navbar 
-        activeTab={activeTab}
-        onSelectTab={handleSelectTab}
-        cartCount={cartCount}
-        wishlistCount={wishlist.length}
-        onOpenCart={() => setCartOpen(true)}
-        currency={currency}
-        onToggleCurrency={handleToggleCurrency}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+      {activeTab === 'gateway' ? (
+        <GatewayPage 
+          onChoosePortal={handleMascotChoice}
+          onExploreAll={() => {
+            setActiveTab('store');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      ) : (
+        <>
+          <Navbar 
+            activeTab={activeTab}
+            onSelectTab={handleSelectTab}
+            cartCount={cartCount}
+            wishlistCount={wishlist.length}
+            onOpenCart={() => setCartOpen(true)}
+            currency={currency}
+            onToggleCurrency={handleToggleCurrency}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onOpenMascot={() => setActiveTab('gateway')}
+          />
 
-      {activeTab === 'store' && <Hero onSelectTab={handleSelectTab} />}
+          {activeTab === 'store' && <Hero onSelectTab={handleSelectTab} />}
 
       <main className="container">
         {/* 1. STORE CATALOG & FACETED SEARCH */}
@@ -261,6 +296,23 @@ export default function App() {
             onSelectCategory={setActiveProjCat}
             searchQuery={searchQuery}
             onExploreProject={(proj) => setSelectedProject(proj)}
+          />
+        )}
+
+        {/* 2.5 WEB SOLUTIONS & DIGITAL SYSTEMS */}
+        {activeTab === 'webSolutions' && (
+          <WebSolutionsSection 
+            currency={currency}
+            onOpenConsultation={(inquiry) => {
+              setActiveTab('about');
+              setContactSubject(inquiry || 'Web Solutions & Digital Systems Consultation');
+              setContactMessage(`Hello Buildify Solutions Engineering Team,\n\nI would like to discuss a custom web development / digital system project.\nScope: ${inquiry || 'Custom Web Application'}`);
+              setTimeout(() => {
+                const el = document.getElementById('contactFormWrap');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 200);
+            }}
+            onShowToast={showToast}
           />
         )}
 
@@ -362,6 +414,23 @@ export default function App() {
         totalCost={checkoutModalData?.totalCost || 0}
         currency={checkoutModalData?.currency || currency}
       />
+
+      {/* 3D Mascot First Page Open Welcome Modal */}
+      <MascotWelcomeModal 
+        isOpen={showMascotModal}
+        onClose={() => setShowMascotModal(false)}
+        onSelectOption={handleMascotChoice}
+      />
+
+      {/* Floating Mascot Guide Button (Return to Gateway anytime) */}
+      <FloatingMascotBtn 
+        onClick={() => {
+          setActiveTab('gateway');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+    </>
+  )}
 
       {/* Toast Notifications */}
       <div className="toast-container">

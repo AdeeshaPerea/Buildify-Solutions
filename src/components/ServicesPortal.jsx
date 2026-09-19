@@ -300,7 +300,7 @@ export default function ServicesPortal({ customServices, currency, onOpenConsult
           <Cpu size={48} style={{ color: 'var(--accent-orange)', margin: '0 auto 1rem' }} />
           <h3 style={{ fontSize: '1.8rem', marginBottom: '0.75rem' }}>Bespoke Embedded Systems R&D</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-            Work directly with Daham Karunathilake and our engineering staff to design custom telemetry nodes, wireless LoRa/ESP-NOW mesh networks, smart agriculture automation, or industrial Modbus controllers.
+            Work directly with the Buildify Solutions engineering team to design custom telemetry nodes, wireless LoRa/ESP-NOW mesh networks, smart agriculture automation, or industrial Modbus controllers.
           </p>
           <button className="btn btn-primary" onClick={onOpenConsultation} style={{ padding: '1rem 2.5rem', fontSize: '1.05rem' }}>
             Schedule 1-on-1 Engineering Consultation

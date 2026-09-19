@@ -6,8 +6,8 @@ export const BUILDIFY_DATA = {
     tagline: "WE BUILD. YOU GROW.",
     subtitle: "Web Development • Embedded Systems • IoT & Robotics • Digital Solutions",
     description: "Your premier destination for IoT hardware, microcontrollers (ESP32, Arduino, Raspberry Pi), sensors, robotics, STEM maker kits, 3D printing gear, and turn-key custom engineering.",
-    founder: "Daham Karunathilake",
-    email: "karunathilakadaham@gmail.com",
+    founder: "Buildify Solutions",
+    email: "buildifysolution@gmail.com",
     phone: "071 7790035",
     internationalPhone: "+94 71 7790035",
     website: "buildifysolutions.lk",
@@ -25,14 +25,14 @@ export const BUILDIFY_DATA = {
       { id: "systems", title: "Business Systems", icon: "bi-display", desc: "Custom embedded IoT hardware, sensor telemetry, and automation." },
       { id: "digital", title: "Digital Solutions", icon: "bi-graph-up-arrow", desc: "Custom PCB design, 3D printing on demand, and hardware fabrication." }
     ],
-    story: "Founded by Daham Karunathilake in Sri Lanka, Buildify Solutions was established with a singular mission: 'WE BUILD. YOU GROW.' We empower students, makers, and enterprises with genuine development boards, industrial sensors, robotics kits, and turn-key custom engineering solutions — bridging the gap between hardware concepts and commercial execution.",
+    story: "Founded in Sri Lanka, Buildify Solutions was established with a singular mission: 'WE BUILD. YOU GROW.' We empower students, makers, and enterprises with genuine development boards, industrial sensors, robotics kits, and turn-key custom engineering solutions — bridging the gap between hardware concepts and commercial execution.",
     team: [
       {
-        name: "Daham Karunathilake",
-        role: "Founder & Lead Solutions Architect",
-        bio: "Visionary founder steering Buildify Solutions across hardware innovation, IoT systems, and custom engineering builds in Sri Lanka.",
+        name: "Buildify Solutions Engineering",
+        role: "Lead Systems & Hardware Architects",
+        bio: "Dedicated engineering team steering Buildify Solutions across hardware innovation, IoT systems, and custom engineering builds in Sri Lanka.",
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
-        badge: "Founder & Lead Architect"
+        badge: "Core Engineering Team"
       },
       {
         name: "Dr. Elena Rostova",

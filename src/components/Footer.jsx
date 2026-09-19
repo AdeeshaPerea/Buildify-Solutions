@@ -11,7 +11,7 @@ export default function Footer({ onSelectTab }) {
               <Logo size="medium" showTagline={true} />
             </div>
             <p className="footer-brand-desc">
-              Founded in Sri Lanka by Daham Karunathilake. Empowering creators, students, and businesses with IoT microcontrollers, robotics modules, and custom digital systems.
+              Buildify Solutions — Sri Lanka. Empowering creators, students, and businesses with IoT microcontrollers, robotics modules, and custom digital systems.
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', color: 'var(--text-muted)', fontSize: '1.2rem' }}>
               <span className="footer-link"><i className="bi bi-linkedin"></i></span>

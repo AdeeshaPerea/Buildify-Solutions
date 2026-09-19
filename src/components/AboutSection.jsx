@@ -75,7 +75,7 @@ export default function AboutSection({ company, contactSubject, setContactSubjec
         </div>
         <h3 style={{ fontSize: '1.6rem', marginBottom: '0.5rem' }}>Meet the Buildify Engineering Team</h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>
-          Founded by Daham Karunathilake and driven by embedded hardware architects and robotics specialists.
+          Driven by Buildify Solutions embedded hardware architects and robotics specialists.
         </p>
         <div className="team-grid">
           {company.team.map((member, idx) => (
@@ -101,7 +101,7 @@ export default function AboutSection({ company, contactSubject, setContactSubjec
             <div className="section-eyebrow"><Mail size={14} /> Let's Connect</div>
             <h3 style={{ fontSize: '1.5rem', marginTop: '0.25rem' }}>Have a Project or Custom Order?</h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-              Reach out to Daham Karunathilake & the Buildify team for component sourcing, bulk student kits, custom IoT builds, or technical support.
+              Reach out to the Buildify Solutions engineering team for component sourcing, bulk student kits, custom IoT builds, or technical support.
             </p>
           </div>
 

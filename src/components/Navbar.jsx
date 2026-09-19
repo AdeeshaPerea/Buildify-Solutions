@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Logo from './Logo';
-import { ShoppingCart, Menu, X, ChevronDown, Truck, Layers, Heart } from 'lucide-react';
+import { ShoppingCart, Menu, X, ChevronDown, Truck, Layers, Heart, Code2, Sparkles } from 'lucide-react';
 
 export default function Navbar({ 
   activeTab, 
@@ -11,7 +11,8 @@ export default function Navbar({
   currency, 
   onToggleCurrency, 
   searchQuery, 
-  onSearchChange 
+  onSearchChange,
+  onOpenMascot 
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -24,12 +25,21 @@ export default function Navbar({
     <header className="site-header">
       <div className="container header-container">
         {/* Official Brand Logo */}
-        <div onClick={() => handleNavClick('store', 'all')}>
+        <div onClick={() => handleNavClick('gateway')} title="Return to Welcome Portal">
           <Logo size="small" showTagline={true} />
         </div>
 
         {/* Navigation Tabs based on the tree */}
         <nav className="main-nav">
+          {/* 0. GATEWAY PORTAL */}
+          <button 
+            className={`nav-link ${activeTab === 'gateway' ? 'active' : ''}`}
+            onClick={() => handleNavClick('gateway')}
+            title="Return to Welcome Gateway & Mascot"
+          >
+            <Sparkles size={15} style={{ color: 'var(--accent-orange)' }} /> Gateway
+          </button>
+
           {/* 1. STORE */}
           <div className="nav-dropdown">
             <button 
@@ -93,7 +103,15 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* 3. CUSTOM SERVICES PORTAL (PCB & 3D PRINT) */}
+          {/* 3. WEB SOLUTIONS & DIGITAL SYSTEMS */}
+          <button 
+            className={`nav-link ${activeTab === 'webSolutions' ? 'active' : ''}`}
+            onClick={() => handleNavClick('webSolutions')}
+          >
+            <Code2 size={16} /> Web Solutions
+          </button>
+
+          {/* 4. CUSTOM SERVICES PORTAL (PCB & 3D PRINT) */}
           <button 
             className={`nav-link ${activeTab === 'services' ? 'active' : ''}`}
             onClick={() => handleNavClick('services')}
@@ -101,7 +119,7 @@ export default function Navbar({
             <Layers size={16} /> Services Portal
           </button>
 
-          {/* 4. TRACK ORDER */}
+          {/* 5. TRACK ORDER */}
           <button 
             className={`nav-link ${activeTab === 'tracking' ? 'active' : ''}`}
             onClick={() => handleNavClick('tracking')}
@@ -109,7 +127,7 @@ export default function Navbar({
             <Truck size={16} /> Track Order
           </button>
 
-          {/* 5. LEARN */}
+          {/* 6. LEARN */}
           <div className="nav-dropdown">
             <button 
               className={`nav-link ${activeTab === 'learn' ? 'active' : ''}`}
@@ -130,7 +148,7 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* 6. ABOUT */}
+          {/* 7. ABOUT */}
           <button 
             className={`nav-link ${activeTab === 'about' ? 'active' : ''}`}
             onClick={() => handleNavClick('about')}
@@ -141,6 +159,16 @@ export default function Navbar({
 
         {/* Header Actions */}
         <div className="header-actions">
+          {/* Ask Mascot Guide Button */}
+          <button 
+            className="btn-mascot-nav"
+            onClick={onOpenMascot}
+            title="Ask Buildify Mascot Guide (IoT or Web Solutions?)"
+          >
+            <img src="/mascot.png" alt="Buildy" className="nav-mascot-thumb" />
+            <span>Ask Mascot</span>
+          </button>
+
           {/* Currency Toggle (LKR / USD) */}
           <button 
             className="currency-toggle-btn"
@@ -184,8 +212,14 @@ export default function Navbar({
 
       {/* Mobile Nav Drawer */}
       <div className={`mobile-nav-drawer ${mobileMenuOpen ? 'active' : ''}`}>
+        <div className="dropdown-item" onClick={() => { onOpenMascot(); setMobileMenuOpen(false); }}>
+          <i className="bi bi-robot" style={{ color: 'var(--accent-orange)' }}></i> Ask Mascot (Buildy Guide)
+        </div>
         <div className="dropdown-item" onClick={() => handleNavClick('store', 'all')}>
-          <i className="bi bi-shop"></i> Store Catalog
+          <i className="bi bi-shop"></i> Store Catalog (IoT Products)
+        </div>
+        <div className="dropdown-item" onClick={() => handleNavClick('webSolutions')}>
+          <i className="bi bi-code-slash"></i> Web Solutions & Systems
         </div>
         <div className="dropdown-item" onClick={() => handleNavClick('projects', 'all')}>
           <i className="bi bi-gear-wide-connected"></i> Buildify Projects
