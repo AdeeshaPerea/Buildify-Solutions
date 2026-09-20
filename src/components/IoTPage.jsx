@@ -50,6 +50,14 @@ import {
   AlertTriangle,
   Building2
 } from 'lucide-react';
+import StoreMaintenanceView from './StoreMaintenanceView';
+
+// =========================================================================
+// TEMPORARY HARDWARE STORE MAINTENANCE MODE
+// Set to TRUE to display the awesome Mascot Under-Maintenance / Lab Upgrade screen.
+// Set to FALSE to immediately restore the full active store & product catalog!
+// =========================================================================
+export const IS_STORE_UNDER_MAINTENANCE = true;
 
 export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin }) {
   // Navigation tabs: 'store' (Hardware Store) | 'about' (About Us) | 'contracts' (Bulk Stock & Custom Projects) | 'delivery' | 'policies' | 'faq'
@@ -604,6 +612,9 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
             >
               <Box size={15} />
               <span>Hardware Store</span>
+              {IS_STORE_UNDER_MAINTENANCE && (
+                <span className="tab-maintenance-tag">Upgrading</span>
+              )}
             </button>
 
             <button
@@ -684,6 +695,12 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
           TAB 1: HARDWARE STORE & FLASH DEALS
           ========================================================= */}
       {activeTab === 'store' && (
+        IS_STORE_UNDER_MAINTENANCE ? (
+          <StoreMaintenanceView
+            onSwitchToContracts={() => setActiveTab('contracts')}
+            onSwitchToWeb={onSwitchToWeb}
+          />
+        ) : (
         <main className="iot-store-view">
           {/* Flash Deals & Sale Highlights Carousel */}
           <section className="iot-flash-sales-section">
@@ -1048,6 +1065,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
             </div>
           </section>
         </main>
+        )
       )}
 
       {/* =========================================================
