@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
+import { rfpStore } from '../services/rfpStore';
 import { 
   Code2, 
   Monitor, 
@@ -78,6 +79,7 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
     message: ''
   });
   const [quoteSubmitted, setQuoteSubmitted] = useState(false);
+  const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
 
   // Typewriter effect loop
   useEffect(() => {
@@ -168,10 +170,41 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
     return `Rs. ${lkrAmount.toLocaleString()}`;
   };
 
-  const handleQuoteSubmit = (e) => {
+  const handleQuoteSubmit = async (e) => {
     e.preventDefault();
     if (!quoteForm.name || !quoteForm.phone) return;
-    setQuoteSubmitted(true);
+
+    setIsSubmittingQuote(true);
+
+    const activeAddons = [
+      hasDomain ? 'Custom Domain & DNS Setup' : null,
+      hasFirebase ? 'Firebase Cloud DB & Hosting' : null,
+      hasAuth ? 'User Authentication & Roles' : null,
+      hasPayment ? 'Payment Gateway Integration' : null,
+      hasRealtime ? 'IoT WebSockets / MQTT Streaming' : null,
+      hasNotifications ? 'Automated WhatsApp & SMS Alerts' : null
+    ].filter(Boolean);
+
+    try {
+      await rfpStore.addProposal({
+        category: 'Web Development',
+        inquiryType: 'Web Development',
+        companyName: quoteForm.company ? quoteForm.company.trim() : 'Direct Client',
+        contactPerson: quoteForm.name.trim(),
+        phone: quoteForm.phone.trim(),
+        email: quoteForm.email ? quoteForm.email.trim() : '',
+        contractType: `Web Dev: ${selectedBase.name}`,
+        volumeQty: 1,
+        estimatedValueLKR: totalLKR,
+        addons: activeAddons,
+        projectBrief: quoteForm.message?.trim() || `Client requested ${selectedBase.name} (${activeAddons.length > 0 ? 'Selected Addons: ' + activeAddons.join(', ') : 'Standard package with no add-ons'}).`
+      });
+    } catch (err) {
+      console.warn('Failed to record web development quote in database:', err);
+    } finally {
+      setIsSubmittingQuote(false);
+      setQuoteSubmitted(true);
+    }
   };
 
   const handleWhatsAppQuote = () => {
@@ -1106,8 +1139,8 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
                   </div>
 
                   <div className="quote-btn-group">
-                    <button type="submit" className="web-btn-primary">
-                      <span>Submit Quote Request</span>
+                    <button type="submit" className="web-btn-primary" disabled={isSubmittingQuote} style={{ opacity: isSubmittingQuote ? 0.7 : 1, cursor: isSubmittingQuote ? 'not-allowed' : 'pointer' }}>
+                      <span>{isSubmittingQuote ? 'Sending to Database...' : 'Submit Quote Request'}</span>
                       <Send size={15} />
                     </button>
 

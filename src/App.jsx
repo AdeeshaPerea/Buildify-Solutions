@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GatewayPage from './components/GatewayPage';
 import Logo from './components/Logo';
 import { ArrowLeft, Sparkles, Cpu, Code2, Phone, Mail, Building2, Wrench } from 'lucide-react';
 
 import WebDevelopmentPage from './components/WebDevelopmentPage';
 import IoTPage from './components/IoTPage';
+import AdminPortal from './components/Admin/AdminPortal';
 
 export default function App() {
-  const [activePortal, setActivePortal] = useState('gateway'); // 'gateway' | 'iot' | 'web'
+  const [activePortal, setActivePortal] = useState('gateway'); // 'gateway' | 'iot' | 'web' | 'admin'
   const [toasts, setToasts] = useState([]);
 
   const showToast = (message, type = 'info') => {
@@ -18,15 +19,51 @@ export default function App() {
     }, 3500);
   };
 
+  // URL Hash & Shortcut Detection for Admin Access (#admin or Ctrl+Shift+A)
+  useEffect(() => {
+    const checkHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      if (hash === '#admin' || hash === '#/admin' || search.includes('portal=admin') || search.includes('admin=true')) {
+        setActivePortal('admin');
+      }
+    };
+
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+
+    // Secret keyboard shortcut: Ctrl + Shift + A (or Cmd + Shift + A)
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        setActivePortal('admin');
+        window.location.hash = '#admin';
+        showToast('🔐 Opening Buildify Operations Admin Terminal', 'info');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('hashchange', checkHash);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const handlePortalChoice = (choice) => {
     if (choice === 'iot') {
       setActivePortal('iot');
+      window.location.hash = '';
       showToast('⚡ Welcome to Buildify IoT & Hardware Store!', 'success');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (choice === 'web') {
       setActivePortal('web');
+      window.location.hash = '';
       showToast('💻 Welcome to Buildify Web Development Studio!', 'success');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (choice === 'admin') {
+      setActivePortal('admin');
+      window.location.hash = '#admin';
     }
   };
 
@@ -34,7 +71,7 @@ export default function App() {
     <div className={`buildify-app portal-theme-${activePortal}`}>
       {/* Toast Notifications */}
       {toasts.length > 0 && (
-        <div className="toast-container" style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="toast-container" style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 99999, display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {toasts.map((t) => (
             <div 
               key={t.id} 
@@ -68,11 +105,17 @@ export default function App() {
         <IoTPage 
           onBackToGateway={() => {
             setActivePortal('gateway');
+            window.location.hash = '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onSwitchToWeb={() => {
             setActivePortal('web');
+            window.location.hash = '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenAdmin={() => {
+            setActivePortal('admin');
+            window.location.hash = '#admin';
           }}
         />
       )}
@@ -82,10 +125,23 @@ export default function App() {
         <WebDevelopmentPage 
           onBackToGateway={() => {
             setActivePortal('gateway');
+            window.location.hash = '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onSwitchToIoT={() => {
             setActivePortal('iot');
+            window.location.hash = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      )}
+
+      {/* 4. ADMIN MANAGEMENT PORTAL (RESTRICTED AUTHENTICATION GATE) */}
+      {activePortal === 'admin' && (
+        <AdminPortal 
+          onBackToStore={() => {
+            setActivePortal('iot');
+            window.location.hash = '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
@@ -93,3 +149,4 @@ export default function App() {
     </div>
   );
 }
+

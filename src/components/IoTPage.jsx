@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Logo from './Logo';
 import { BUILDIFY_DATA } from '../data/buildifyData';
+import { productStore } from '../services/productStore';
+import { rfpStore } from '../services/rfpStore';
 import {
   Cpu,
   Zap,
@@ -8,6 +10,7 @@ import {
   Truck,
   Clock,
   ShieldCheck,
+  Lock,
   SlidersHorizontal,
   Search,
   ShoppingCart,
@@ -47,7 +50,7 @@ import {
   Building2
 } from 'lucide-react';
 
-export default function IoTPage({ onBackToGateway, onSwitchToWeb }) {
+export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin }) {
   // Navigation tabs: 'store' (Hardware Store) | 'about' (About Us) | 'contracts' (Bulk Stock & Custom Projects) | 'delivery' | 'policies' | 'faq'
   const [activeTab, setActiveTab] = useState('store');
 
@@ -245,8 +248,16 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb }) {
     window.open(`https://wa.me/94717790035?text=${text}`, '_blank');
   };
 
-  // Filtered Products Catalog
-  const allProducts = BUILDIFY_DATA.products || [];
+  // Dynamic Products Catalog (Synced with productStore and LocalStorage)
+  const [allProducts, setAllProducts] = useState(productStore.getProducts());
+
+  useEffect(() => {
+    const unsubscribe = productStore.subscribe((updated) => {
+      setAllProducts(updated);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const filteredProducts = useMemo(() => {
     return allProducts.filter((p) => {
       // Search
@@ -316,9 +327,27 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb }) {
   const grossContractLKR = (selectedTier.unitBaseLKR + unitAddOnsLKR) * volumeQty;
   const netContractLKR = grossContractLKR * (1 - volumeDiscountPct / 100);
 
-  const handleContractSubmit = (e) => {
+  const handleContractSubmit = async (e) => {
     e.preventDefault();
     if (!contractForm.companyName || !contractForm.phone) return;
+
+    try {
+      await rfpStore.addProposal({
+        category: 'IoT Hardware',
+        inquiryType: 'IoT Hardware',
+        companyName: contractForm.companyName,
+        contactPerson: contractForm.contactPerson,
+        phone: contractForm.phone,
+        email: contractForm.email,
+        projectBrief: contractForm.projectBrief,
+        contractType: selectedTier.title,
+        volumeQty: volumeQty,
+        estimatedValueLKR: netContractLKR
+      });
+    } catch (err) {
+      console.warn('Failed to record proposal in database:', err);
+    }
+
     setContractSubmitted(true);
   };
 
@@ -2856,9 +2885,39 @@ xTaskCreatePinnedToCore(
           </div>
         </div>
 
-        {/* Sub-strip for copyright */}
-        <div className="iot-footer-sub-strip">
+        {/* Sub-strip for copyright & Authorized Staff Portal Access */}
+        <div className="iot-footer-sub-strip" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <span>&copy; {new Date().getFullYear()} Buildify Solutions. Smart IoT Microcontrollers, Precision Sensors & STEM Maker Kits.</span>
+          {onOpenAdmin && (
+            <button
+              onClick={onOpenAdmin}
+              title="Restricted Staff & Admin Management Portal (Ctrl+Shift+A)"
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                color: '#64748b',
+                fontSize: '0.74rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#f59e0b';
+                e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#64748b';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              }}
+            >
+              <Lock size={12} />
+              <span>Staff Portal</span>
+            </button>
+          )}
         </div>
       </footer>
     </div>
