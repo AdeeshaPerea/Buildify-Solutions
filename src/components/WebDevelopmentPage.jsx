@@ -42,6 +42,33 @@ const ROTATING_PHRASES = [
   "Custom Web Apps"
 ];
 
+const FAQ_ITEMS = [
+  {
+    q: "How does the project estimation and delivery timeline work?",
+    a: "Our base non-functional presentation and showcase websites start from Rs. 25,000 ($82 USD). Dynamic full-stack business applications, inventory ERPs, and IoT cloud telemetry hubs range from Rs. 45,000 to Rs. 125,000+. Production timelines typically range from 5 to 21 working days depending on custom integrations like Firebase database, PayHere payment gateways, and role-based authentication."
+  },
+  {
+    q: "Can I connect custom IoT hardware (ESP32 / Arduino) to my web portal?",
+    a: "Yes! Buildify specializes in bridging physical microcontroller hardware with web platforms. We engineer real-time MQTT and WebSocket telemetry pipelines that display live sensor streams (temperature, humidity, load cells, liquid levels) and allow instant remote relay switching directly from your mobile or PC browser."
+  },
+  {
+    q: "Do you integrate Sri Lankan payment gateways like PayHere?",
+    a: "Absolutely. We integrate PayHere, WebXpay, and direct Visa/Mastercard processing, alongside automated direct bank transfer slip uploads and instant WhatsApp/SMS order notifications for both you and your customers."
+  },
+  {
+    q: "Will my website look great on mobile and rank well on Google?",
+    a: "Every web system we deliver is engineered mobile-first with 100% fluid responsiveness across smartphones, tablets, laptops, and ultra-wide desktops. We optimize Core Web Vitals, page load speeds (under 1.5s), automated sitemaps, and Open Graph social cards for superior search engine rankings."
+  },
+  {
+    q: "What cloud backend and hosting infrastructure do you deploy on?",
+    a: "We deploy on robust modern cloud infrastructures including Google Cloud Firebase (Firestore, Cloud Functions, Cloud Storage), Supabase, Node.js, and Vercel/Netlify with automatic SSL encryption and 99.9% uptime guarantees."
+  },
+  {
+    q: "Can I manage and update content on my website after launch?",
+    a: "Yes. Depending on your chosen scope, we provide intuitive role-based admin portals (Admin, Manager, Staff) where you can easily update inventory, view customer quote requests, manage orders, and edit website text without writing code."
+  }
+];
+
 export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
   // Typewriter text animation state
   const [textIndex, setTextIndex] = useState(0);
@@ -55,6 +82,9 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
   // Simulated IoT demo controls
   const [relayActive, setRelayActive] = useState(true);
   const [sensorValues, setSensorValues] = useState({ temp: 28.6, humidity: 64, pressure: 1013 });
+
+  // FAQ accordion state
+  const [openFaq, setOpenFaq] = useState(0);
 
   // Currency state: 'LKR' | 'USD'
   const [currency, setCurrency] = useState('LKR');
@@ -336,7 +366,8 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
               onClick={onSwitchToIoT}
               title="Switch to IoT Products & Hardware Store"
             >
-              <span>⚡ Switch to IoT Store</span>
+              <span className="switch-desktop-label">⚡ Switch to IoT Store</span>
+              <span className="switch-mobile-label">⚡ IoT Store</span>
             </button>
 
             <button 
@@ -345,8 +376,21 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
               title="Chat with Web Engineering Team on WhatsApp"
             >
               <i className="bi bi-whatsapp"></i>
-              <span>Let's Talk</span>
+              <span className="talk-desktop-label">Let's Talk</span>
+              <span className="talk-mobile-label">Chat</span>
             </button>
+          </div>
+        </div>
+
+        {/* Mobile Quick Horizontal Scroller Navigation */}
+        <div className="web-mobile-quick-nav" aria-label="Mobile Navigation">
+          <div className="web-mobile-nav-scroller">
+            <a href="#aboutSection" className="mobile-nav-chip">About</a>
+            <a href="#solutionsSection" className="mobile-nav-chip">Solutions</a>
+            <a href="#estimatorSection" className="mobile-nav-chip">Estimator</a>
+            <a href="#portfolioSection" className="mobile-nav-chip">Portfolio</a>
+            <a href="#faqSection" className="mobile-nav-chip">FAQ</a>
+            <a href="#quoteSection" className="mobile-nav-chip chip-highlight">Get Quote</a>
           </div>
         </div>
       </header>
@@ -1027,6 +1071,55 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
                 </a>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Frequently Asked Questions (FAQ) Section */}
+      <section className="web-faq-section" id="faqSection">
+        <div className="section-container">
+          <div className="section-header-centered">
+            <div className="section-eyebrow eyebrow-cyan">
+              <Sparkles size={13} /> Common Inquiries
+            </div>
+            <h2 className="section-title-large">Frequently Asked <span className="gradient-text-cyan">Questions</span></h2>
+            <p className="section-desc-centered">
+              Clear answers regarding pricing, project workflows, payment gateways, and IoT hardware connectivity.
+            </p>
+          </div>
+
+          <div className="faq-accordion-container">
+            {FAQ_ITEMS.map((faq, index) => {
+              const isOpen = openFaq === index;
+              return (
+                <div 
+                  key={index} 
+                  className={`faq-glass-card ${isOpen ? 'active' : ''}`}
+                  onClick={() => setOpenFaq(isOpen ? null : index)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setOpenFaq(isOpen ? null : index); }}
+                >
+                  <div className="faq-question-row">
+                    <div className="faq-question-left">
+                      <span className="faq-num">0{index + 1}</span>
+                      <h3 className="faq-question-text">{faq.q}</h3>
+                    </div>
+                    <div 
+                      className="faq-toggle-circle" 
+                      aria-expanded={isOpen}
+                    >
+                      <ChevronDown size={18} className={`faq-chevron ${isOpen ? 'rotated' : ''}`} />
+                    </div>
+                  </div>
+                  {isOpen && (
+                    <div className="faq-answer-body">
+                      <p>{faq.a}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

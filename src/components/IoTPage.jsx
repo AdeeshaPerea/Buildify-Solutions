@@ -10,6 +10,7 @@ import {
   Truck,
   Clock,
   ShieldCheck,
+  ShieldAlert,
   Lock,
   SlidersHorizontal,
   Search,
@@ -66,6 +67,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [activeModalProduct, setActiveModalProduct] = useState(null);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   // Cart Drawer State
   const [cart, setCart] = useState([]);
@@ -173,6 +175,11 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
       category: 'warranty',
       q: "Why is there a testing fee of Rs. 1,000/hour if an item is found working or burned due to misuse?",
       a: "If an item submitted for warranty is tested and found fully functional, or burned due to reverse polarity/overvoltage/miswiring, our qualified engineering team issues a technical test report/video proof. A fee of Rs. 1,000 per hour is charged for the diagnostic bench time spent by our technical staff."
+    },
+    {
+      category: 'warranty',
+      q: "Can I return or exchange an item after opening the packaging or breaking the seal?",
+      a: "No. We maintain a strict No-Return and No-Exchange policy once the security seal is broken, heat-sealed anti-static bag is cut, or the product is taken out of its factory packaging. Because microcontrollers, ICs, and sensors are highly sensitive to Electrostatic Discharge (ESD), reverse polarity, and soldering heat, goods are strictly non-returnable once unsealed. Returns or exchanges are only eligible within 7 days if the item is 100% unopened in pristine original factory sealed condition."
     },
     {
       category: 'technical',
@@ -744,9 +751,54 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
 
           {/* Master Storefront: Left Faceted Sidebar + Right Products Grid */}
           <section className="iot-store-layout-section">
+            <div className="section-container">
+              {/* Mobile Filter & Quick Category Bar (Visible only on <= 992px) */}
+              <div className="iot-mobile-filter-bar">
+                <button 
+                  className={`mobile-filter-toggle-btn ${isMobileFiltersOpen ? 'active' : ''}`}
+                  onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+                >
+                  <SlidersHorizontal size={15} />
+                  <span>{isMobileFiltersOpen ? 'Close Filters' : 'Filter by Specs & Voltage'}</span>
+                  {(selectedCategory !== 'all' || selectedBrand !== 'All' || selectedVoltage !== 'All' || inStockOnly || onlyDiscounted || searchQuery) && (
+                    <span className="mobile-filter-count-badge">Active</span>
+                  )}
+                </button>
+
+                {(selectedCategory !== 'all' || selectedBrand !== 'All' || selectedVoltage !== 'All' || inStockOnly || onlyDiscounted || searchQuery) && (
+                  <button 
+                    className="mobile-filter-reset-btn"
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      setSelectedBrand('All');
+                      setSelectedVoltage('All');
+                      setInStockOnly(false);
+                      setOnlyDiscounted(false);
+                      setSearchQuery('');
+                    }}
+                  >
+                    Reset All
+                  </button>
+                )}
+              </div>
+
+              {/* Mobile Quick Category Horizontal Scroller */}
+              <div className="mobile-quick-cats-scroller">
+                {(BUILDIFY_DATA.storeCategories || []).map((cat) => (
+                  <button
+                    key={cat.id}
+                    className={`quick-cat-chip ${selectedCategory === cat.id ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat.id)}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="section-container store-grid-wrapper">
               {/* LEFT: Faceted Categories & Technical Filter Sidebar */}
-              <aside className="store-faceted-sidebar">
+              <aside className={`store-faceted-sidebar ${isMobileFiltersOpen ? 'mobile-open' : ''}`}>
                 <div className="sidebar-filter-header">
                   <div className="filter-title">
                     <SlidersHorizontal size={15} />
@@ -2126,7 +2178,7 @@ xTaskCreatePinnedToCore(
                 </div>
               </div>
 
-              {/* Notice Strip: Physical Damage & Logistics Notice */}
+              {/* Notice Strip: Physical Damage, Logistics & Strict No-Return Notice */}
               <div className="policy-alert-banner">
                 <div className="alert-banner-item">
                   <div className="alert-icon-box"><Clock size={22} className="text-amber" /></div>
@@ -2143,6 +2195,74 @@ xTaskCreatePinnedToCore(
                   <div>
                     <strong>Important Notice on Shipping & Transport Costs</strong>
                     <p>Buildify Solutions is solely liable for the physical items sold under the stated warranty conditions. <strong>All transport, courier, postal, and handling costs</strong> incurred to deliver items to our shop for inspection, or to receive replaced/repaired items back, must be <strong>fully borne by the customer</strong>.</p>
+                  </div>
+                </div>
+
+                <div className="alert-banner-divider"></div>
+
+                <div className="alert-banner-item">
+                  <div className="alert-icon-box"><ShieldAlert size={22} className="text-red" /></div>
+                  <div>
+                    <strong>Strict No-Return Policy (Seal Broken / Unpacked)</strong>
+                    <p>No returns, refunds, or exchanges once the security seal is broken, anti-static bag is unsealed, or the item is taken out of its factory packaging.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dedicated Official Return & Anti-Static Packaging Policy Card */}
+              <div className="policy-seal-return-card">
+                <div className="seal-return-header">
+                  <div className="seal-header-left">
+                    <div className="seal-icon-badge">
+                      <ShieldAlert size={26} className="text-red" />
+                    </div>
+                    <div>
+                      <span className="seal-policy-eyebrow">OFFICIAL STORE RETURN POLICY</span>
+                      <h3>Strict No-Return Policy: Unpacked & Broken-Seal Hardware</h3>
+                    </div>
+                  </div>
+                  <span className="seal-status-tag">
+                    <Lock size={12} /> Non-Returnable Once Opened
+                  </span>
+                </div>
+
+                <div className="seal-return-content">
+                  <p className="seal-lead-text">
+                    Under Buildify Solutions official store terms, <strong>goods cannot be returned, exchanged, or refunded once the anti-static packaging or security seal has been removed, broken, or the item has been taken out of its factory packing</strong>.
+                  </p>
+
+                  <div className="seal-reasons-grid">
+                    <div className="seal-reason-item">
+                      <div className="seal-reason-icon">⚡</div>
+                      <div>
+                        <strong>Electrostatic Discharge (ESD) Sensitivity:</strong>
+                        <p>Microcontrollers (ESP32, Arduino, STM32, RP2040) and semiconductor ICs are highly sensitive to microscopic electrostatic discharge from fingertips or non-grounded tools, which can cause internal gate oxide breakdown.</p>
+                      </div>
+                    </div>
+
+                    <div className="seal-reason-item">
+                      <div className="seal-reason-icon">🔒</div>
+                      <div>
+                        <strong>100% Untouched Factory-Fresh Guarantee:</strong>
+                        <p>To guarantee that every maker and engineering client receives 100% brand-new, factory-tested, uncompromised components, we never restock or resell any module or sensor that has been opened or handled.</p>
+                      </div>
+                    </div>
+
+                    <div className="seal-reason-item">
+                      <div className="seal-reason-icon">⚠️</div>
+                      <div>
+                        <strong>Wiring & Reverse Voltage Risks:</strong>
+                        <p>Any module showing evidence of breadboard pin insertion, terminal connection, soldering traces, or reverse polarity exposure is strictly ineligible for return, credit, or exchange.</p>
+                      </div>
+                    </div>
+
+                    <div className="seal-reason-item">
+                      <div className="seal-reason-icon">📦</div>
+                      <div>
+                        <strong>Return Eligibility Exception (Unopened Only):</strong>
+                        <p>A return or exchange request will only be considered within <strong>7 days of purchase</strong> if the item remains in <strong>100% pristine, unopened, and sealed original factory packaging</strong> with original receipt/invoice.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2347,6 +2467,10 @@ xTaskCreatePinnedToCore(
                     {
                       q: "8. Why does Buildify Solutions charge for technical support?",
                       a: "You need to pay for the time spent on your work by our qualified technical staff."
+                    },
+                    {
+                      q: "9. Can I return, exchange, or refund an item if the security seal or anti-static packing has been opened?",
+                      a: "No. Buildify Solutions strictly enforces a NO-RETURN and NO-REFUND policy once the security seal is broken, anti-static bag is cut, or the product is removed from its packaging. Microcontrollers and silicon sensors are highly sensitive to Electrostatic Discharge (ESD) and wiring errors. To protect all clients with guaranteed 100% genuine, untampered factory stock, returns are strictly rejected once opened."
                     }
                   ].map((pfaq, pIdx) => {
                     const isOpen = openPolicyFaq === pIdx;
@@ -2371,13 +2495,13 @@ xTaskCreatePinnedToCore(
                 </div>
               </div>
 
-              {/* Warranty Voiding Conditions (11 Factors) */}
+              {/* Warranty Voiding Conditions (12 Factors) */}
               <div className="voiding-conditions-panel">
                 <div className="void-header">
                   <AlertCircle size={20} className="text-amber" />
                   <div>
                     <h3>WARRANTY TERMS & CONDITIONS</h3>
-                    <p>Warranty will be void if one or many of the following conditions have met:</p>
+                    <p>Warranty or return requests will be strictly void / rejected if one or many of the following conditions have met:</p>
                   </div>
                 </div>
 
@@ -2425,6 +2549,10 @@ xTaskCreatePinnedToCore(
                   <div className="void-card">
                     <span className="v-num">11</span>
                     <p>Utilization in combination with equipment, items or materials not permitted by documentation</p>
+                  </div>
+                  <div className="void-card void-card-alert">
+                    <span className="v-num text-red">12</span>
+                    <p><strong>Broken security seal or opened anti-static factory packaging</strong> (strictly voids return, exchange, or refund eligibility)</p>
                   </div>
                 </div>
               </div>
@@ -2885,39 +3013,9 @@ xTaskCreatePinnedToCore(
           </div>
         </div>
 
-        {/* Sub-strip for copyright & Authorized Staff Portal Access */}
-        <div className="iot-footer-sub-strip" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        {/* Sub-strip for copyright */}
+        <div className="iot-footer-sub-strip">
           <span>&copy; {new Date().getFullYear()} Buildify Solutions. Smart IoT Microcontrollers, Precision Sensors & STEM Maker Kits.</span>
-          {onOpenAdmin && (
-            <button
-              onClick={onOpenAdmin}
-              title="Restricted Staff & Admin Management Portal (Ctrl+Shift+A)"
-              style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '6px',
-                padding: '4px 10px',
-                color: '#64748b',
-                fontSize: '0.74rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#f59e0b';
-                e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#64748b';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-              }}
-            >
-              <Lock size={12} />
-              <span>Staff Portal</span>
-            </button>
-          )}
         </div>
       </footer>
     </div>
