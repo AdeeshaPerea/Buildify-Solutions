@@ -326,6 +326,20 @@ export default function GatewayPage({ onChoosePortal, onExploreAll }) {
           </div>
         </div>
 
+        {/* MOBILE RESPONSIVE LASER SEPARATOR (VISIBLE ONLY ON MOBILE/TABLET WHEN SPLIT STACKS) */}
+        <div className="gateway-mobile-laser-divider" aria-hidden="true">
+          <div className="mobile-laser-track">
+            <span className="mobile-laser-glow-bar"></span>
+            <span className="mobile-laser-core-bar"></span>
+            <span className="mobile-laser-runner"></span>
+          </div>
+          <div className="mobile-laser-node" title="Choose IoT Hardware or Web Solutions">
+            <div className="mobile-node-ring"></div>
+            <Zap size={14} className="mobile-node-zap" />
+            <span className="mobile-node-text">OR</span>
+          </div>
+        </div>
+
         {/* LOWER-LEFT HALF: WEB (EMBEDDED INTO PAGE) */}
         <div 
           className={`page-split-territory territory-web ${hoveredPortal === 'web' ? 'is-hovered' : ''}`}
