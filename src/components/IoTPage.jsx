@@ -53,13 +53,27 @@ import {
 import StoreMaintenanceView from './StoreMaintenanceView';
 
 // =========================================================================
-// TEMPORARY HARDWARE STORE MAINTENANCE MODE
-// Set to TRUE to display the awesome Mascot Under-Maintenance / Lab Upgrade screen.
-// Set to FALSE to immediately restore the full active store & product catalog!
+// HARDWARE STORE MAINTENANCE MODE TOGGLE
+// Default is FALSE (active live hardware store with updated stock).
+// Set to TRUE to display the Mascot Under-Maintenance / Lab Restock screen.
+// Can also be previewed by adding ?maintenance=true to the URL.
 // =========================================================================
-export const IS_STORE_UNDER_MAINTENANCE = true;
+export const IS_STORE_UNDER_MAINTENANCE = false;
+
+const checkMaintenanceMode = () => {
+  if (typeof window === 'undefined') return IS_STORE_UNDER_MAINTENANCE;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('maintenance') === 'true' || params.get('restock') === 'true') return true;
+    if (params.get('maintenance') === 'false' || params.get('restock') === 'false') return false;
+    const stored = localStorage.getItem('buildify_store_maintenance');
+    if (stored !== null) return stored === 'true';
+  } catch (e) {}
+  return IS_STORE_UNDER_MAINTENANCE;
+};
 
 export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin }) {
+  const isMaintenanceActive = checkMaintenanceMode();
   // Navigation tabs: 'store' (Hardware Store) | 'about' (About Us) | 'contracts' (Bulk Stock & Custom Projects) | 'delivery' | 'policies' | 'faq'
   const [activeTab, setActiveTab] = useState('store');
 
@@ -612,7 +626,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
             >
               <Box size={15} />
               <span>Hardware Store</span>
-              {IS_STORE_UNDER_MAINTENANCE && (
+              {isMaintenanceActive && (
                 <span className="tab-maintenance-tag">Upgrading</span>
               )}
             </button>
@@ -695,7 +709,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
           TAB 1: HARDWARE STORE & FLASH DEALS
           ========================================================= */}
       {activeTab === 'store' && (
-        IS_STORE_UNDER_MAINTENANCE ? (
+        isMaintenanceActive ? (
           <StoreMaintenanceView
             onSwitchToContracts={() => setActiveTab('contracts')}
             onSwitchToWeb={onSwitchToWeb}
