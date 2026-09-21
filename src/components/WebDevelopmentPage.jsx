@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
 import { rfpStore } from '../services/rfpStore';
+import { currencyService } from '../services/currencyService';
 import { 
   Code2, 
   Monitor, 
@@ -86,9 +87,16 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
   // FAQ accordion state
   const [openFaq, setOpenFaq] = useState(0);
 
-  // Currency state: 'LKR' | 'USD'
+  // Currency state: 'LKR' | 'USD' (Powered by Live Real-Time Forex Rate)
   const [currency, setCurrency] = useState('LKR');
-  const USD_RATE = 305;
+  const [forexData, setForexData] = useState(currencyService.getRate());
+
+  useEffect(() => {
+    const unsubForex = currencyService.subscribe((data) => {
+      setForexData(data);
+    });
+    return () => unsubForex();
+  }, []);
 
   // Interactive Project Estimator State
   const [projectType, setProjectType] = useState('static_non_functional');
@@ -191,13 +199,9 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
 
   const totalLKR = selectedBase.lkr + addOnsLKR;
 
-  // Currency Formatter Helper
+  // Currency Formatter Helper (Real-time live forex conversion)
   const formatPrice = (lkrAmount) => {
-    if (currency === 'USD') {
-      const usd = Math.round(lkrAmount / USD_RATE);
-      return `$${usd.toLocaleString()}`;
-    }
-    return `Rs. ${lkrAmount.toLocaleString()}`;
+    return currencyService.formatPrice(lkrAmount, currency, true);
   };
 
   const handleQuoteSubmit = async (e) => {
@@ -857,7 +861,7 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
                       {formatPrice(totalLKR)}
                     </div>
                     <span className="invest-note">
-                      {currency === 'USD' ? 'Exchange rate estimated at ~Rs. 305 per USD' : 'Transparent pricing with zero hidden surcharges'}
+                      {currency === 'USD' ? `Real-time Live Forex: 1 USD ≈ Rs. ${forexData.rate} (${forexData.lastUpdated})` : 'Transparent pricing with zero hidden surcharges'}
                     </span>
                   </div>
 

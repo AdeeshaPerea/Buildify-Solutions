@@ -14,10 +14,12 @@ import {
   uploadBytesResumable,
   getDownloadURL
 } from 'firebase/storage';
+import { currencyService } from './currencyService';
 
 const STORAGE_KEY = 'buildify_iot_products';
-const EXCHANGE_RATE = 310.0;
+const CATEGORIES_STORAGE_KEY = 'buildify_iot_categories';
 const FIRESTORE_COLLECTION = 'products';
+const FIRESTORE_CATEGORIES_COLLECTION = 'categories';
 
 // Clean object to ensure no `undefined` properties are sent to Firestore
 function sanitizeForFirestore(obj) {
@@ -42,8 +44,11 @@ function sanitizeForFirestore(obj) {
 class ProductStore {
   constructor() {
     this.listeners = new Set();
+    this.categoryListeners = new Set();
     this.products = this.loadLocalProducts();
+    this.categories = this.loadLocalCategories();
     this.firestoreUnsubscribe = null;
+    this.firestoreCategoriesUnsubscribe = null;
     this.cloudConnected = false;
     this.initFirestoreSync();
   }
@@ -80,11 +85,49 @@ class ProductStore {
     return initial;
   }
 
+  loadLocalCategories() {
+    try {
+      const stored = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load local categories:', err);
+    }
+    const initial = BUILDIFY_DATA.storeCategories && BUILDIFY_DATA.storeCategories.length > 0
+      ? [...BUILDIFY_DATA.storeCategories]
+      : [
+          { id: "all", name: "All Products", icon: "bi-grid-fill" },
+          { id: "esp32", name: "ESP32", icon: "bi-cpu" },
+          { id: "arduino", name: "Arduino", icon: "bi-lightning-charge-fill" },
+          { id: "raspberry", name: "Raspberry Pi", icon: "bi-motherboard" },
+          { id: "sensors", name: "Sensors", icon: "bi-broadcast-pin" },
+          { id: "modules", name: "Modules", icon: "bi-cpu-fill" },
+          { id: "robotics", name: "Robotics", icon: "bi-robot" },
+          { id: "kits", name: "Kits", icon: "bi-box-seam-fill" },
+          { id: "3dprint", name: "3D Printing", icon: "bi-printer" },
+          { id: "tools", name: "Tools & Passives", icon: "bi-tools" }
+        ];
+    this.saveCategoriesToStorage(initial);
+    return initial;
+  }
+
   saveToStorage(products) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
     } catch (err) {
       console.error('Failed to save to localStorage:', err);
+    }
+  }
+
+  saveCategoriesToStorage(categories) {
+    try {
+      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
+    } catch (err) {
+      console.error('Failed to save categories to localStorage:', err);
     }
   }
 
@@ -94,6 +137,16 @@ class ProductStore {
         listener(this.products);
       } catch (err) {
         console.error('Error in productStore listener:', err);
+      }
+    });
+  }
+
+  notifyCategories() {
+    this.categoryListeners.forEach((listener) => {
+      try {
+        listener(this.categories);
+      } catch (err) {
+        console.error('Error in productStore category listener:', err);
       }
     });
   }
@@ -109,12 +162,86 @@ class ProductStore {
     };
   }
 
+  subscribeCategories(listener) {
+    this.categoryListeners.add(listener);
+    try {
+      listener(this.categories);
+    } catch (e) {}
+    return () => {
+      this.categoryListeners.delete(listener);
+    };
+  }
+
   getProducts() {
     return [...this.products];
   }
 
   getProductById(id) {
     return this.products.find((p) => p.id === id);
+  }
+
+  getCategories() {
+    return [...this.categories];
+  }
+
+  async addCategory(categoryData) {
+    if (!categoryData || !categoryData.name) {
+      throw new Error('Category name is required.');
+    }
+
+    const name = categoryData.name.trim();
+    let id = categoryData.id 
+      ? categoryData.id.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '')
+      : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    if (!id) {
+      id = `cat-${Date.now()}`;
+    }
+
+    const existing = this.categories.find(c => c.id === id || c.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      throw new Error(`Category "${name}" already exists.`);
+    }
+
+    const newCategory = {
+      id,
+      name,
+      icon: categoryData.icon || 'bi-tag-fill'
+    };
+
+    this.categories.push(newCategory);
+    this.saveCategoriesToStorage(this.categories);
+    this.notifyCategories();
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await setDoc(doc(db, FIRESTORE_CATEGORIES_COLLECTION, id), sanitizeForFirestore(newCategory), { merge: true });
+        console.log(`🔥 Synced new category "${name}" to Firestore.`);
+      } catch (err) {
+        console.warn('Failed to sync category to Firestore:', err);
+      }
+    }
+
+    return newCategory;
+  }
+
+  async deleteCategory(id) {
+    if (id === 'all') {
+      throw new Error('Cannot delete default "All Products" category.');
+    }
+    this.categories = this.categories.filter(c => c.id !== id);
+    this.saveCategoriesToStorage(this.categories);
+    this.notifyCategories();
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await deleteDoc(doc(db, FIRESTORE_CATEGORIES_COLLECTION, id));
+        console.log(`🔥 Deleted category "${id}" from Firestore.`);
+      } catch (err) {
+        console.warn('Failed to delete category from Firestore:', err);
+      }
+    }
+    return true;
   }
 
   /**
@@ -125,7 +252,7 @@ class ProductStore {
       try {
         const colRef = collection(db, FIRESTORE_COLLECTION);
         
-        // Listen for real-time updates from Firestore
+        // Listen for real-time updates from Firestore for products
         this.firestoreUnsubscribe = onSnapshot(colRef, (snapshot) => {
           if (!snapshot.empty) {
             const firestoreProducts = [];
@@ -142,6 +269,28 @@ class ProductStore {
           }
         }, (err) => {
           console.warn('Firestore subscription notice (using local fallback):', err.message);
+        });
+
+        // Listen for real-time updates from Firestore for categories
+        const catColRef = collection(db, FIRESTORE_CATEGORIES_COLLECTION);
+        this.firestoreCategoriesUnsubscribe = onSnapshot(catColRef, (snapshot) => {
+          if (!snapshot.empty) {
+            const firestoreCategories = [];
+            snapshot.forEach((d) => {
+              firestoreCategories.push({ id: d.id, ...d.data() });
+            });
+            if (!firestoreCategories.some(c => c.id === 'all')) {
+              firestoreCategories.unshift({ id: 'all', name: 'All Products', icon: 'bi-grid-fill' });
+            }
+            this.categories = firestoreCategories;
+            this.saveCategoriesToStorage(this.categories);
+            this.notifyCategories();
+            console.log(`🔥 Real-time sync: Loaded ${firestoreCategories.length} categories from Firestore.`);
+          } else {
+            this.seedFirestoreCategories();
+          }
+        }, (err) => {
+          console.warn('Firestore categories subscription notice:', err.message);
         });
       } catch (err) {
         console.warn('Firestore initialization error:', err);
@@ -164,6 +313,19 @@ class ProductStore {
       console.log('✅ Firestore seeded with initial catalog successfully.');
     } catch (err) {
       console.warn('Failed to seed Firestore:', err);
+    }
+  }
+
+  async seedFirestoreCategories() {
+    if (!isFirebaseConfigured() || !db) return;
+    try {
+      const initial = this.categories.length > 0 ? this.categories : (BUILDIFY_DATA.storeCategories || []);
+      for (const c of initial) {
+        await setDoc(doc(db, FIRESTORE_CATEGORIES_COLLECTION, c.id), sanitizeForFirestore(c), { merge: true });
+      }
+      console.log('✅ Firestore seeded with initial categories successfully.');
+    } catch (err) {
+      console.warn('Failed to seed categories to Firestore:', err);
     }
   }
 
@@ -292,10 +454,11 @@ class ProductStore {
   }
 
   async addProduct(productData) {
+    const liveRate = currencyService.getUsdRateNumber();
     const priceLKR = parseFloat(productData.priceLKR) || 0;
-    const priceUSD = parseFloat((priceLKR / EXCHANGE_RATE).toFixed(2));
+    const priceUSD = parseFloat((priceLKR / liveRate).toFixed(2));
     const originalPriceLKR = productData.originalPriceLKR ? parseFloat(productData.originalPriceLKR) : null;
-    const originalPriceUSD = originalPriceLKR ? parseFloat((originalPriceLKR / EXCHANGE_RATE).toFixed(2)) : null;
+    const originalPriceUSD = originalPriceLKR ? parseFloat((originalPriceLKR / liveRate).toFixed(2)) : null;
     const stockQuantity = parseInt(productData.stockQuantity, 10) || 0;
 
     const newProduct = {
@@ -347,9 +510,11 @@ class ProductStore {
       if (p.id === id) {
         const merged = { ...p, ...updates };
 
+        const liveRate = currencyService.getUsdRateNumber();
+
         if (updates.priceLKR !== undefined) {
           merged.priceLKR = parseFloat(updates.priceLKR) || 0;
-          merged.price = parseFloat((merged.priceLKR / EXCHANGE_RATE).toFixed(2));
+          merged.price = parseFloat((merged.priceLKR / liveRate).toFixed(2));
         }
         if (updates.originalPriceLKR !== undefined) {
           if (updates.originalPriceLKR === null || updates.originalPriceLKR === '') {
@@ -357,7 +522,7 @@ class ProductStore {
             merged.originalPrice = null;
           } else {
             merged.originalPriceLKR = parseFloat(updates.originalPriceLKR);
-            merged.originalPrice = parseFloat((merged.originalPriceLKR / EXCHANGE_RATE).toFixed(2));
+            merged.originalPrice = parseFloat((merged.originalPriceLKR / liveRate).toFixed(2));
           }
         }
         if (updates.stockQuantity !== undefined) {

@@ -1,3 +1,5 @@
+import { currencyService } from '../services/currencyService';
+
 // Buildify Solutions - Master Data Registry & E-Commerce Catalog
 
 export const BUILDIFY_DATA = {
@@ -13,7 +15,9 @@ export const BUILDIFY_DATA = {
     website: "buildifysolutions.lk",
     location: "Wewalduwa, Tyre Junction, Kelaniya, Sri Lanka",
     workingHours: "Mon - Sat: 8:30 AM - 7:00 PM (IST)",
-    exchangeRateLKR: 310.0, // 1 USD = 310 LKR
+    get exchangeRateLKR() {
+      return currencyService.getUsdRateNumber();
+    },
     stats: [
       { label: "Hardware SKU Items", value: "2,500+" },
       { label: "Active Student Projects", value: "450+" },

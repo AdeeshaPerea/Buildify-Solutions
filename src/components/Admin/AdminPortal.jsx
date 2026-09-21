@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { productStore } from '../../services/productStore';
 import { rfpStore } from '../../services/rfpStore';
 import { authService } from '../../services/authService';
+import { currencyService } from '../../services/currencyService';
 import { isFirebaseConfigured, getFirebaseConfig, saveFirebaseConfig } from '../../services/firebase';
 import Logo from '../Logo';
 import {
@@ -51,20 +52,27 @@ import {
   Building,
   CheckCheck,
   User,
-  Clock
+  Clock,
+  FolderPlus,
+  FolderCheck,
+  Folder
 } from 'lucide-react';
 
-const CATEGORIES = [
-  { id: 'all', name: 'All Categories' },
-  { id: 'esp32', name: 'ESP32 & Wireless' },
-  { id: 'arduino', name: 'Arduino & AVR' },
-  { id: 'raspberry', name: 'Raspberry Pi & SBC' },
-  { id: 'sensors', name: 'Sensors & Probes' },
-  { id: 'modules', name: 'Power & Relays' },
-  { id: 'robotics', name: 'Robotics & Servos' },
-  { id: 'kits', name: 'STEM Starter Kits' },
-  { id: '3dprint', name: '3D Printing & CNC' },
-  { id: 'tools', name: 'Tools & Soldering' }
+const POPULAR_CATEGORY_ICONS = [
+  { id: 'bi-grid-fill', label: 'All / Grid' },
+  { id: 'bi-cpu', label: 'ESP32 / MCU' },
+  { id: 'bi-lightning-charge-fill', label: 'Power & Relays' },
+  { id: 'bi-broadcast-pin', label: 'Sensors & Wireless' },
+  { id: 'bi-display', label: 'Displays & OLED' },
+  { id: 'bi-motherboard', label: 'SBC & Pi' },
+  { id: 'bi-robot', label: 'Robotics & Servos' },
+  { id: 'bi-box-seam-fill', label: 'Kits & Starters' },
+  { id: 'bi-printer', label: '3D Print & CNC' },
+  { id: 'bi-tools', label: 'Tools & Passives' },
+  { id: 'bi-battery-charging', label: 'Batteries & Solar' },
+  { id: 'bi-wifi', label: 'WiFi & Networking' },
+  { id: 'bi-camera-video', label: 'Cameras & Vision' },
+  { id: 'bi-tag-fill', label: 'General Tag' }
 ];
 
 const SAMPLE_IMAGES = [
@@ -123,12 +131,83 @@ export default function AdminPortal({ onBackToStore }) {
   // Delete Confirmation Modal
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
+  // Categories State & Add Category Modal State
+  const [categories, setCategories] = useState(productStore.getCategories());
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [categoryForm, setCategoryForm] = useState({ name: '', id: '', icon: 'bi-tag-fill', isCustomId: false });
+  const [categoryError, setCategoryError] = useState('');
+  const [categorySuccess, setCategorySuccess] = useState('');
+  const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
+
+  // Live Real-Time Forex State
+  const [forexData, setForexData] = useState(currencyService.getRate());
+
   // Notifications
   const [bannerNotice, setBannerNotice] = useState(null);
 
-  const showNotification = (msg, type = 'success') => {
+  const showNotification = (msg, type = 'info') => {
     setBannerNotice({ msg, type });
     setTimeout(() => setBannerNotice(null), 3500);
+  };
+
+  const handleCategoryNameChange = (name) => {
+    const autoSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    setCategoryForm(prev => ({
+      ...prev,
+      name,
+      id: prev.isCustomId ? prev.id : autoSlug
+    }));
+  };
+
+  const handleAddCategorySubmit = async (e) => {
+    e?.preventDefault?.();
+    if (!categoryForm.name.trim()) {
+      setCategoryError('Please enter a category name.');
+      return;
+    }
+
+    try {
+      setIsSubmittingCategory(true);
+      setCategoryError('');
+      const newCat = await productStore.addCategory({
+        name: categoryForm.name.trim(),
+        id: categoryForm.id.trim(),
+        icon: categoryForm.icon
+      });
+      showNotification(`✨ Category "${newCat.name}" added successfully!`, 'success');
+      setCategorySuccess(`Category "${newCat.name}" created!`);
+      // Automatically select in product form if open
+      setFormData(prev => ({ ...prev, category: newCat.id }));
+      setTimeout(() => {
+        setIsAddCategoryOpen(false);
+        setCategoryForm({ name: '', id: '', icon: 'bi-tag-fill', isCustomId: false });
+        setCategorySuccess('');
+      }, 700);
+    } catch (err) {
+      setCategoryError(err.message || 'Failed to add category.');
+    } finally {
+      setIsSubmittingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (catId, catName) => {
+    if (catId === 'all') return;
+    const count = products.filter(p => p.category === catId).length;
+    let confirmMsg = `Are you sure you want to remove category "${catName}"?`;
+    if (count > 0) {
+      confirmMsg += ` Note: ${count} product(s) are currently in this category.`;
+    }
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      await productStore.deleteCategory(catId);
+      if (selectedCategory === catId) {
+        setSelectedCategory('all');
+      }
+      showNotification(`Category "${catName}" deleted.`, 'info');
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
   };
 
   // Product Form Initial Data
@@ -170,7 +249,13 @@ export default function AdminPortal({ onBackToStore }) {
     const unsubscribe = productStore.subscribe((updatedList) => {
       setProducts(updatedList);
     });
-    return () => unsubscribe();
+    const unsubscribeCats = productStore.subscribeCategories((updatedCats) => {
+      setCategories(updatedCats);
+    });
+    return () => {
+      unsubscribe();
+      unsubscribeCats();
+    };
   }, []);
 
   // Subscribe to RFP proposals updates (and Cloud Firestore)
@@ -179,6 +264,14 @@ export default function AdminPortal({ onBackToStore }) {
       setProposals(updatedList);
     });
     return () => unsubscribe();
+  }, []);
+
+  // Subscribe to real-time USD/LKR forex exchange rate
+  useEffect(() => {
+    const unsubscribeForex = currencyService.subscribe((data) => {
+      setForexData(data);
+    });
+    return () => unsubscribeForex();
   }, []);
 
   // Handle Login
@@ -510,9 +603,10 @@ export default function AdminPortal({ onBackToStore }) {
     const discounted = products.filter(p => p.originalPriceLKR && p.originalPriceLKR > p.priceLKR).length;
     const lowStock = products.filter(p => !p.inStock || p.stockQuantity <= (p.lowStockThreshold || 5)).length;
     const totalValueLKR = products.reduce((acc, p) => acc + (p.priceLKR * (p.stockQuantity || 1)), 0);
+    const totalValueUSD = forexData?.rate ? (totalValueLKR / forexData.rate).toFixed(2) : '0.00';
 
-    return { total, discounted, lowStock, totalValueLKR };
-  }, [products]);
+    return { total, discounted, lowStock, totalValueLKR, totalValueUSD };
+  }, [products, forexData]);
 
   // Filtered Products for Admin Table
   const filteredProducts = useMemo(() => {
@@ -1176,9 +1270,25 @@ export default function AdminPortal({ onBackToStore }) {
               <DollarSign size={24} />
             </div>
             <div>
-              <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Inventory Valuation</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981' }}>
+              <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>Total Inventory Valuation</span>
+                <span style={{
+                  fontSize: '0.65rem',
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                  background: forexData.isLive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                  color: forexData.isLive ? '#10b981' : '#94a3b8',
+                  border: `1px solid ${forexData.isLive ? 'rgba(16, 185, 129, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`,
+                  fontWeight: 600
+                }}>
+                  {forexData.isLive ? '🟢 Live Forex' : '⚪ Cached'}
+                </span>
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#10b981' }}>
                 Rs. {Math.round(metrics.totalValueLKR).toLocaleString()}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>
+                ≈ ${Number(metrics.totalValueUSD).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD <span style={{ opacity: 0.75 }}>($1 = Rs. {forexData.rate ? Number(forexData.rate).toFixed(2) : '---'})</span>
               </div>
             </div>
           </div>
@@ -1270,6 +1380,34 @@ export default function AdminPortal({ onBackToStore }) {
                 Low / Out of Stock ({metrics.lowStock})
               </button>
 
+              {/* Primary Add Category Button */}
+              <button
+                onClick={() => {
+                  setCategoryForm({ name: '', id: '', icon: 'bi-tag-fill', isCustomId: false });
+                  setCategoryError('');
+                  setCategorySuccess('');
+                  setIsAddCategoryOpen(true);
+                }}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  background: 'rgba(56, 189, 248, 0.12)',
+                  color: '#38bdf8',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 15px rgba(56, 189, 248, 0.15)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <FolderPlus size={18} />
+                Add Category
+              </button>
+
               {/* Primary Add Button */}
               <button
                 onClick={handleOpenAddModal}
@@ -1302,25 +1440,109 @@ export default function AdminPortal({ onBackToStore }) {
             overflowX: 'auto',
             paddingBottom: '4px'
           }}>
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  background: selectedCategory === cat.id ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                  border: selectedCategory === cat.id ? '1px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.08)',
-                  color: selectedCategory === cat.id ? '#f59e0b' : '#94a3b8',
-                  cursor: 'pointer'
-                }}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const count = cat.id === 'all' 
+                ? products.length 
+                : products.filter(p => p.category === cat.id).length;
+              return (
+                <div
+                  key={cat.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: selectedCategory === cat.id ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                    border: selectedCategory === cat.id ? '1px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '20px',
+                    padding: '2px 4px 2px 12px',
+                    gap: '6px',
+                    flexShrink: 0
+                  }}
+                >
+                  <button
+                    onClick={() => setSelectedCategory(cat.id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '4px 0',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      color: selectedCategory === cat.id ? '#f59e0b' : '#94a3b8',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <span>{cat.name}</span>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      padding: '1px 6px',
+                      borderRadius: '999px',
+                      background: selectedCategory === cat.id ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255, 255, 255, 0.06)',
+                      color: selectedCategory === cat.id ? '#fef3c7' : '#64748b'
+                    }}>
+                      {count}
+                    </span>
+                  </button>
+
+                  {/* Delete button for custom non-system categories */}
+                  {cat.id !== 'all' && !['esp32', 'arduino', 'raspberry', 'sensors', 'modules', 'robotics', 'kits', '3dprint', 'tools'].includes(cat.id) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCategory(cat.id, cat.name);
+                      }}
+                      title={`Delete custom category "${cat.name}"`}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#ef4444',
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        opacity: 0.7,
+                        borderRadius: '50%'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Quick + Add Category Tab Pill */}
+            <button
+              onClick={() => {
+                setCategoryForm({ name: '', id: '', icon: 'bi-tag-fill', isCustomId: false });
+                setCategoryError('');
+                setCategorySuccess('');
+                setIsAddCategoryOpen(true);
+              }}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                background: 'rgba(56, 189, 248, 0.1)',
+                border: '1px dashed rgba(56, 189, 248, 0.45)',
+                color: '#38bdf8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                flexShrink: 0
+              }}
+              title="Add a new product category"
+            >
+              <Plus size={14} />
+              <span>Add Category</span>
+            </button>
           </div>
         </div>
 
@@ -2166,9 +2388,35 @@ export default function AdminPortal({ onBackToStore }) {
               {/* Row 2: Category & Brand */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '5px' }}>
-                    Category
-                  </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#cbd5e1' }}>
+                      Category *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryForm({ name: '', id: '', icon: 'bi-tag-fill', isCustomId: false });
+                        setCategoryError('');
+                        setCategorySuccess('');
+                        setIsAddCategoryOpen(true);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#f59e0b',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        padding: 0
+                      }}
+                    >
+                      <Plus size={13} />
+                      <span>New Category</span>
+                    </button>
+                  </div>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -2184,7 +2432,7 @@ export default function AdminPortal({ onBackToStore }) {
                       boxSizing: 'border-box'
                     }}
                   >
-                    {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+                    {categories.filter(c => c.id !== 'all').map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
@@ -2409,6 +2657,11 @@ export default function AdminPortal({ onBackToStore }) {
                     <div style={{ fontSize: '0.7rem', color: '#f59e0b', marginTop: '4px', fontWeight: 600 }}>
                       Customer pays (auto)
                     </div>
+                    {formData.priceLKR && !isNaN(parseFloat(formData.priceLKR)) && parseFloat(formData.priceLKR) > 0 && (
+                      <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: '4px' }}>
+                        ≈ ${(parseFloat(formData.priceLKR) / (forexData.rate || 330)).toFixed(2)} USD (Live rate: Rs. {forexData.rate ? Number(forexData.rate).toFixed(2) : '330.00'})
+                      </div>
+                    )}
                   </div>
 
                   {/* Badge / Tag */}
@@ -3820,6 +4073,346 @@ export default function AdminPortal({ onBackToStore }) {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL 6: ADD NEW CATEGORY MANAGER                                     */}
+      {/* ===================================================================== */}
+      {isAddCategoryOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 10005,
+          background: 'rgba(0, 0, 0, 0.82)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '560px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            background: '#0b0f19',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            borderRadius: '20px',
+            padding: '2rem',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.85)',
+            color: '#fff',
+            position: 'relative'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '10px',
+                  background: 'rgba(56, 189, 248, 0.15)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#38bdf8'
+                }}>
+                  <FolderPlus size={22} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#f8fafc' }}>
+                    Add Product Category
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>
+                    Create custom hardware classifications for the store & database
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddCategoryOpen(false);
+                  setCategoryError('');
+                  setCategorySuccess('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '6px'
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Error & Success Messages */}
+            {categoryError && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                color: '#f87171',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontSize: '0.84rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertTriangle size={16} />
+                <span>{categoryError}</span>
+              </div>
+            )}
+
+            {categorySuccess && (
+              <div style={{
+                background: 'rgba(34, 197, 94, 0.15)',
+                border: '1px solid rgba(34, 197, 94, 0.35)',
+                color: '#4ade80',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontSize: '0.84rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <CheckCircle2 size={16} />
+                <span>{categorySuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAddCategorySubmit}>
+              {/* Category Name */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+                  Category Display Name *
+                </label>
+                <input
+                  type="text"
+                  value={categoryForm.name}
+                  onChange={(e) => handleCategoryNameChange(e.target.value)}
+                  placeholder="e.g. Micro OLED & LCD Displays, Motors & Drivers"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    background: 'rgba(2, 6, 23, 0.8)',
+                    border: '1px solid rgba(56, 189, 248, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              {/* Category Slug / Key ID */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1' }}>
+                    Category Slug / ID *
+                  </label>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                    Unique identifier used in database & filters
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={categoryForm.id}
+                  onChange={(e) => {
+                    const cleanSlug = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+                    setCategoryForm(prev => ({ ...prev, id: cleanSlug, isCustomId: true }));
+                  }}
+                  placeholder="e.g. displays, motor-drivers"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    background: 'rgba(2, 6, 23, 0.8)',
+                    border: '1px solid rgba(148, 163, 184, 0.25)',
+                    borderRadius: '8px',
+                    color: '#38bdf8',
+                    fontFamily: 'monospace',
+                    fontSize: '0.88rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  required
+                />
+              </div>
+
+              {/* Icon Selector */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+                  Category Icon Badge
+                </label>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(115px, 1fr))',
+                  gap: '8px',
+                  maxHeight: '160px',
+                  overflowY: 'auto',
+                  padding: '8px',
+                  background: 'rgba(2, 6, 23, 0.5)',
+                  border: '1px solid rgba(148, 163, 184, 0.15)',
+                  borderRadius: '10px'
+                }}>
+                  {POPULAR_CATEGORY_ICONS.map((ico) => {
+                    const isSelected = categoryForm.icon === ico.id;
+                    return (
+                      <button
+                        key={ico.id}
+                        type="button"
+                        onClick={() => setCategoryForm(prev => ({ ...prev, icon: ico.id }))}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 10px',
+                          borderRadius: '8px',
+                          background: isSelected ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                          border: isSelected ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.08)',
+                          color: isSelected ? '#38bdf8' : '#cbd5e1',
+                          fontSize: '0.74rem',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <i className={`bi ${ico.id}`} style={{ fontSize: '1rem', color: isSelected ? '#38bdf8' : '#94a3b8' }}></i>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ico.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Existing Categories Preview & Management */}
+              <div style={{
+                marginBottom: '1.5rem',
+                padding: '12px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '10px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.76rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>
+                    Active Categories ({categories.filter(c => c.id !== 'all').length})
+                  </span>
+                  <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                    Tap trash to remove custom categories
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '110px', overflowY: 'auto' }}>
+                  {categories.filter(c => c.id !== 'all').map((c) => {
+                    const isDefault = ['esp32', 'arduino', 'raspberry', 'sensors', 'modules', 'robotics', 'kits', '3dprint', 'tools'].includes(c.id);
+                    const count = products.filter(p => p.category === c.id).length;
+                    return (
+                      <span
+                        key={c.id}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.74rem',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: '#cbd5e1'
+                        }}
+                      >
+                        <i className={`bi ${c.icon || 'bi-tag-fill'}`} style={{ color: '#f59e0b' }}></i>
+                        <span>{c.name}</span>
+                        <span style={{ fontSize: '0.66rem', color: '#94a3b8', background: 'rgba(0,0,0,0.3)', padding: '0 4px', borderRadius: '4px' }}>
+                          {count}
+                        </span>
+                        {!isDefault && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(c.id, c.name)}
+                            title={`Delete ${c.name}`}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              padding: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              marginLeft: '2px'
+                            }}
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Form Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddCategoryOpen(false);
+                    setCategoryError('');
+                    setCategorySuccess('');
+                  }}
+                  style={{
+                    padding: '9px 18px',
+                    borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#cbd5e1',
+                    fontSize: '0.86rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingCategory}
+                  style={{
+                    padding: '9px 22px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
+                    color: '#000',
+                    fontSize: '0.86rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: isSubmittingCategory ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 15px rgba(56, 189, 248, 0.35)'
+                  }}
+                >
+                  {isSubmittingCategory ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      <span>Create Category</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

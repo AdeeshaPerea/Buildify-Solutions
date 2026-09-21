@@ -3,6 +3,7 @@ import Logo from './Logo';
 import { BUILDIFY_DATA } from '../data/buildifyData';
 import { productStore } from '../services/productStore';
 import { rfpStore } from '../services/rfpStore';
+import { currencyService } from '../services/currencyService';
 import {
   Cpu,
   Zap,
@@ -77,9 +78,16 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
   // Navigation tabs: 'store' (Hardware Store) | 'about' (About Us) | 'contracts' (Bulk Stock & Custom Projects) | 'delivery' | 'policies' | 'faq'
   const [activeTab, setActiveTab] = useState('store');
 
-  // Currency State: 'LKR' | 'USD'
+  // Currency State: 'LKR' | 'USD' (Powered by Live Real-Time Forex Rate)
   const [currency, setCurrency] = useState('LKR');
-  const USD_RATE = 305;
+  const [forexData, setForexData] = useState(currencyService.getRate());
+
+  useEffect(() => {
+    const unsubForex = currencyService.subscribe((data) => {
+      setForexData(data);
+    });
+    return () => unsubForex();
+  }, []);
 
   // Search & Filter States for Store
   const [searchQuery, setSearchQuery] = useState('');
@@ -215,13 +223,9 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
     }
   ];
 
-  // Currency Formatter Helper
+  // Currency Formatter Helper (Real-time live forex conversion)
   const formatPrice = (lkrAmount) => {
-    if (currency === 'USD') {
-      const usd = Math.round((lkrAmount / USD_RATE) * 100) / 100;
-      return `$${usd.toFixed(2)}`;
-    }
-    return `Rs. ${Math.round(lkrAmount).toLocaleString()}`;
+    return currencyService.formatPrice(lkrAmount, currency);
   };
 
   // Cart Operations
@@ -277,14 +281,21 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
     window.open(`https://wa.me/94717790035?text=${text}`, '_blank');
   };
 
-  // Dynamic Products Catalog (Synced with productStore and LocalStorage)
+  // Dynamic Products Catalog & Categories (Synced with productStore and LocalStorage)
   const [allProducts, setAllProducts] = useState(productStore.getProducts());
+  const [storeCategories, setStoreCategories] = useState(productStore.getCategories());
 
   useEffect(() => {
     const unsubscribe = productStore.subscribe((updated) => {
       setAllProducts(updated);
     });
-    return () => unsubscribe();
+    const unsubscribeCategories = productStore.subscribeCategories((cats) => {
+      setStoreCategories(cats);
+    });
+    return () => {
+      unsubscribe();
+      unsubscribeCategories();
+    };
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -674,8 +685,8 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
 
           {/* Right Controls: Currency Switcher & Cart */}
           <div className="iot-nav-actions">
-            {/* Currency Switcher */}
-            <div className="currency-pill-amber">
+            {/* Currency Switcher (LKR / USD with Real-Time Forex) */}
+            <div className="iot-currency-toggle" title={`Real-time Forex: 1 USD ≈ Rs. ${forexData.rate} (${forexData.lastUpdated})`}>
               <button
                 className={`curr-toggle-btn ${currency === 'LKR' ? 'active' : ''}`}
                 onClick={() => setCurrency('LKR')}
@@ -685,8 +696,13 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
               <button
                 className={`curr-toggle-btn ${currency === 'USD' ? 'active' : ''}`}
                 onClick={() => setCurrency('USD')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                title={`Live Real-Time Rate: 1 USD ≈ Rs. ${forexData.rate}`}
               >
-                USD
+                <span>USD</span>
+                {forexData.isLive && (
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
+                )}
               </button>
             </div>
 
@@ -815,7 +831,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
 
               {/* Mobile Quick Category Horizontal Scroller */}
               <div className="mobile-quick-cats-scroller">
-                {(BUILDIFY_DATA.storeCategories || []).map((cat) => (
+                {(storeCategories || []).map((cat) => (
                   <button
                     key={cat.id}
                     className={`quick-cat-chip ${selectedCategory === cat.id ? 'active' : ''}`}
@@ -872,7 +888,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
                 <div className="filter-group">
                   <label className="filter-group-label">Component Categories</label>
                   <div className="category-pills-list">
-                    {(BUILDIFY_DATA.storeCategories || []).map((cat) => {
+                    {(storeCategories || []).map((cat) => {
                       const count = cat.id === 'all'
                         ? allProducts.length
                         : allProducts.filter(p => p.category === cat.id).length;
@@ -2864,6 +2880,12 @@ xTaskCreatePinnedToCore(
                   <span>Subtotal ({currency}):</span>
                   <strong>{formatPrice(cartSubtotalLKR)}</strong>
                 </div>
+                {currency === 'USD' && (
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px', padding: '2px 0 6px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
+                    <span>Real-time Forex: 1 USD ≈ Rs. {forexData.rate}</span>
+                  </div>
+                )}
                 <div className="cart-summary-line">
                   <span>Islandwide Courier:</span>
                   <span className="text-amber">Calculated at Checkout</span>
