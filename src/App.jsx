@@ -50,6 +50,44 @@ export default function App() {
     };
   }, []);
 
+  // Dynamic Page Title & Meta Tags based on Active Portal
+  useEffect(() => {
+    const portalMetadata = {
+      gateway: {
+        title: 'Buildify Solutions | Web Development, Custom Software, Smart IoT & Robotics',
+        description: 'Buildify Solutions delivers full-stack web development, custom software engineering, business ERP systems, and cutting-edge IoT & robotics solutions. WE BUILD. YOU GROW.'
+      },
+      web: {
+        title: 'Web Development & Custom Software Studio | Buildify Solutions',
+        description: 'High-performance full-stack web platforms, business ERPs, e-commerce stores, custom software, and real-time IoT cloud telemetry dashboards by Buildify Solutions.'
+      },
+      iot: {
+        title: 'Smart IoT, Robotics & Hardware Store | Buildify Solutions',
+        description: 'Shop genuine ESP32, Arduino, Raspberry Pi, robotics kits, sensors, electronic components, and maker gear from Buildify Solutions.'
+      },
+      admin: {
+        title: 'Operations Admin Terminal | Buildify Solutions',
+        description: 'Secure administration portal for Buildify Solutions store operations, inventory management, and client inquiries.'
+      }
+    };
+
+    const currentMeta = portalMetadata[activePortal] || portalMetadata.gateway;
+    document.title = currentMeta.title;
+
+    const metaDescTag = document.querySelector('meta[name="description"]');
+    if (metaDescTag) {
+      metaDescTag.setAttribute('content', currentMeta.description);
+    }
+    const ogTitleTag = document.querySelector('meta[property="og:title"]');
+    if (ogTitleTag) {
+      ogTitleTag.setAttribute('content', currentMeta.title);
+    }
+    const ogDescTag = document.querySelector('meta[property="og:description"]');
+    if (ogDescTag) {
+      ogDescTag.setAttribute('content', currentMeta.description);
+    }
+  }, [activePortal]);
+
   const handlePortalChoice = (choice) => {
     if (choice === 'iot') {
       setActivePortal('iot');
