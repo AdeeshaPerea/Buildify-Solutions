@@ -1,14 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import GatewayPage from './components/GatewayPage';
-import Logo from './components/Logo';
-import { ArrowLeft, Sparkles, Cpu, Code2, Phone, Mail, Building2, Wrench } from 'lucide-react';
-
 import WebDevelopmentPage from './components/WebDevelopmentPage';
 import IoTPage from './components/IoTPage';
 import AdminPortal from './components/Admin/AdminPortal';
+import { 
+  parseRoute, 
+  getPathForPortal, 
+  applyRouteMetadata 
+} from './services/router';
 
 export default function App() {
-  const [activePortal, setActivePortal] = useState('gateway'); // 'gateway' | 'iot' | 'web' | 'admin'
+  // Parse initial route directly from current browser URL pathname & hash
+  const initial = parseRoute(
+    typeof window !== 'undefined' ? window.location.pathname : '/',
+    typeof window !== 'undefined' ? window.location.hash : '',
+    typeof window !== 'undefined' ? window.location.search : ''
+  );
+
+  const [activePortal, setActivePortal] = useState(initial.portal); // 'gateway' | 'iot' | 'web' | 'admin'
+  const [currentStoreTab, setCurrentStoreTab] = useState(initial.tab || 'store');
+  const [currentMetaKey, setCurrentMetaKey] = useState(initial.metaKey);
   const [toasts, setToasts] = useState([]);
 
   const showToast = (message, type = 'info') => {
@@ -19,97 +30,108 @@ export default function App() {
     }, 3500);
   };
 
-  // URL Hash & Shortcut Detection for Admin Access (#admin or Ctrl+Shift+A)
-  useEffect(() => {
-    const checkHash = () => {
-      const hash = window.location.hash.toLowerCase();
-      const search = window.location.search.toLowerCase();
-      if (hash === '#admin' || hash === '#/admin' || search.includes('portal=admin') || search.includes('admin=true')) {
-        setActivePortal('admin');
+  /**
+   * Primary Navigation Engine
+   * Updates browser history with clean SEO URLs without page reloads
+   */
+  const navigate = useCallback((targetPath, options = {}) => {
+    const { replace = false, toast = null, scrollToTop = true } = options;
+    const route = parseRoute(targetPath, '', '');
+
+    if (typeof window !== 'undefined') {
+      if (replace) {
+        window.history.replaceState({}, '', route.cleanPath);
+      } else if (window.location.pathname !== route.cleanPath) {
+        window.history.pushState({}, '', route.cleanPath);
       }
+    }
+
+    setActivePortal(route.portal);
+    if (route.tab) {
+      setCurrentStoreTab(route.tab);
+    } else if (route.portal === 'iot') {
+      setCurrentStoreTab('store');
+    }
+    setCurrentMetaKey(route.metaKey);
+
+    if (toast) {
+      showToast(toast.message, toast.type);
+    }
+
+    if (scrollToTop && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Handle Tab Switch within Hardware Store
+  const handleStoreTabChange = useCallback((tab) => {
+    const targetPath = getPathForPortal('iot', tab);
+    navigate(targetPath, { scrollToTop: false });
+  }, [navigate]);
+
+  // Listen to browser Back / Forward navigation (PopState)
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = parseRoute(window.location.pathname, window.location.hash, window.location.search);
+      setActivePortal(route.portal);
+      if (route.tab) {
+        setCurrentStoreTab(route.tab);
+      } else if (route.portal === 'iot') {
+        setCurrentStoreTab('store');
+      }
+      setCurrentMetaKey(route.metaKey);
     };
 
-    checkHash();
-    window.addEventListener('hashchange', checkHash);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
-    // Secret keyboard shortcut: Ctrl + Shift + A (or Cmd + Shift + A)
+  // Synchronize initial URL and legacy queries (?portal=iot -> /store, #admin -> /admin)
+  useEffect(() => {
+    const initialRoute = parseRoute(window.location.pathname, window.location.hash, window.location.search);
+    if (window.location.pathname !== initialRoute.cleanPath && !window.location.pathname.startsWith('/src')) {
+      // Clean up legacy hash / search query and show official path
+      const preserveParams = window.location.search.includes('maintenance') ? window.location.search : '';
+      window.history.replaceState({}, '', initialRoute.cleanPath + preserveParams);
+    }
+  }, []);
+
+  // Secret keyboard shortcut: Ctrl + Shift + A (or Cmd + Shift + A) for Admin Terminal
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
         e.preventDefault();
-        setActivePortal('admin');
-        window.location.hash = '#admin';
-        showToast('🔐 Opening Buildify Operations Admin Terminal', 'info');
+        navigate('/admin', {
+          toast: { message: '🔐 Opening Buildify Operations Admin Terminal', type: 'info' }
+        });
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
 
-    return () => {
-      window.removeEventListener('hashchange', checkHash);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  // Dynamic Page Title & Meta Tags based on Active Portal
+  // Synchronize document.title, canonical link & Open Graph meta tags on route change
   useEffect(() => {
-    const portalMetadata = {
-      gateway: {
-        title: 'Buildify Solutions | Web Development, Software & Smart IoT',
-        description: 'Buildify Solutions delivers full-stack web development, custom software, ERP systems, and smart IoT & robotics solutions. WE BUILD. YOU GROW.'
-      },
-      web: {
-        title: 'Web Development & Custom Software Studio | Buildify Solutions',
-        description: 'High-performance full-stack web platforms, business ERPs, e-commerce stores, custom software, and real-time IoT cloud telemetry dashboards by Buildify Solutions.'
-      },
-      iot: {
-        title: 'Smart IoT, Robotics & Hardware Store | Buildify Solutions',
-        description: 'Shop genuine ESP32, Arduino, Raspberry Pi, robotics kits, sensors, electronic components, and maker gear from Buildify Solutions.'
-      },
-      admin: {
-        title: 'Operations Admin Terminal | Buildify Solutions',
-        description: 'Secure administration portal for Buildify Solutions store operations, inventory management, and client inquiries.'
-      }
-    };
-
-    const currentMeta = portalMetadata[activePortal] || portalMetadata.gateway;
-    document.title = currentMeta.title;
-
-    const metaDescTag = document.querySelector('meta[name="description"]');
-    if (metaDescTag) {
-      metaDescTag.setAttribute('content', currentMeta.description);
-    }
-    const ogTitleTag = document.querySelector('meta[property="og:title"]');
-    if (ogTitleTag) {
-      ogTitleTag.setAttribute('content', currentMeta.title);
-    }
-    const ogDescTag = document.querySelector('meta[property="og:description"]');
-    if (ogDescTag) {
-      ogDescTag.setAttribute('content', currentMeta.description);
-    }
-  }, [activePortal]);
-
-  const handlePortalChoice = (choice) => {
-    if (choice === 'iot') {
-      setActivePortal('iot');
-      window.location.hash = '';
-      showToast('⚡ Welcome to Buildify IoT & Hardware Store!', 'success');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (choice === 'web') {
-      setActivePortal('web');
-      window.location.hash = '';
-      showToast('💻 Welcome to Buildify Web Development Studio!', 'success');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (choice === 'admin') {
-      setActivePortal('admin');
-      window.location.hash = '#admin';
-    }
-  };
+    applyRouteMetadata(currentMetaKey);
+  }, [currentMetaKey]);
 
   return (
     <div className={`buildify-app portal-theme-${activePortal}`}>
       {/* Toast Notifications */}
       {toasts.length > 0 && (
-        <div className="toast-container" style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 99999, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div 
+          className="toast-container" 
+          style={{ 
+            position: 'fixed', 
+            top: '1.5rem', 
+            right: '1.5rem', 
+            zIndex: 99999, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '8px' 
+          }}
+        >
           {toasts.map((t) => (
             <div 
               key={t.id} 
@@ -130,61 +152,55 @@ export default function App() {
         </div>
       )}
 
-      {/* 1. GATEWAY PAGE (UNTOUCHED & FROZEN) */}
+      {/* 1. GATEWAY PAGE (HOME: /) */}
       {activePortal === 'gateway' && (
         <GatewayPage 
-          onChoosePortal={handlePortalChoice}
-          onExploreAll={() => handlePortalChoice('iot')}
+          onChoosePortal={(choice) => {
+            if (choice === 'iot') {
+              navigate('/store', { toast: { message: '⚡ Welcome to Buildify IoT & Hardware Store!', type: 'success' } });
+            } else if (choice === 'web') {
+              navigate('/web', { toast: { message: '💻 Welcome to Buildify Web Development Studio!', type: 'success' } });
+            } else if (choice === 'admin') {
+              navigate('/admin');
+            } else {
+              navigate('/');
+            }
+          }}
+          onExploreAll={() => {
+            navigate('/store', { toast: { message: '⚡ Welcome to Buildify IoT & Hardware Store!', type: 'success' } });
+          }}
         />
       )}
 
-      {/* 2. IOT HARDWARE SECTION (AMBER CIRCUIT THEME & MAKER STORE) */}
+      {/* 2. IOT HARDWARE STORE (/store, /about, /contracts, /delivery, /policies, /faq) */}
       {activePortal === 'iot' && (
         <IoTPage 
-          onBackToGateway={() => {
-            setActivePortal('gateway');
-            window.location.hash = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
+          activeTab={currentStoreTab}
+          onTabChange={handleStoreTabChange}
+          onBackToGateway={() => navigate('/')}
           onSwitchToWeb={() => {
-            setActivePortal('web');
-            window.location.hash = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            navigate('/web', { toast: { message: '💻 Welcome to Buildify Web Development Studio!', type: 'success' } });
           }}
-          onOpenAdmin={() => {
-            setActivePortal('admin');
-            window.location.hash = '#admin';
-          }}
+          onOpenAdmin={() => navigate('/admin')}
         />
       )}
 
-      {/* 3. WEB DEVELOPMENT SECTION (REBUILT WITH CYBER BLUE & CIRCUIT THEME) */}
+      {/* 3. WEB DEVELOPMENT SECTION (/web) */}
       {activePortal === 'web' && (
         <WebDevelopmentPage 
-          onBackToGateway={() => {
-            setActivePortal('gateway');
-            window.location.hash = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
+          onBackToGateway={() => navigate('/')}
           onSwitchToIoT={() => {
-            setActivePortal('iot');
-            window.location.hash = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            navigate('/store', { toast: { message: '⚡ Welcome to Buildify IoT & Hardware Store!', type: 'success' } });
           }}
         />
       )}
 
-      {/* 4. ADMIN MANAGEMENT PORTAL (RESTRICTED AUTHENTICATION GATE) */}
+      {/* 4. ADMIN MANAGEMENT PORTAL (/admin) */}
       {activePortal === 'admin' && (
         <AdminPortal 
-          onBackToStore={() => {
-            setActivePortal('iot');
-            window.location.hash = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
+          onBackToStore={() => navigate('/store')}
         />
       )}
     </div>
   );
 }
-

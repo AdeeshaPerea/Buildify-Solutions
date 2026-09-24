@@ -1310,17 +1310,20 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
               <a href="https://wa.me/94717790035" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="WhatsApp">
                 <i className="bi bi-whatsapp"></i>
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="LinkedIn">
-                <i className="bi bi-linkedin"></i>
+              <a href="https://www.tiktok.com/@buildifysolutionz?_r=1&_t=ZS-9A0KI77yMMu" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="TikTok">
+                <i className="bi bi-tiktok"></i>
+              </a>
+              <a href="https://www.instagram.com/buildifysolutionz?stkn=MTRramsxb2F5OTVxbA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="Instagram">
+                <i className="bi bi-instagram"></i>
+              </a>
+              <a href="https://x.com/Buildifyz" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="Twitter X">
+                <i className="bi bi-twitter-x"></i>
               </a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="Facebook">
                 <i className="bi bi-facebook"></i>
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="Instagram">
-                <i className="bi bi-instagram"></i>
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="Twitter X">
-                <i className="bi bi-twitter-x"></i>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="LinkedIn">
+                <i className="bi bi-linkedin"></i>
               </a>
               <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn web-social-btn" title="GitHub">
                 <i className="bi bi-github"></i>

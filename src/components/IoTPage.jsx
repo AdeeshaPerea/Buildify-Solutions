@@ -73,10 +73,30 @@ const checkMaintenanceMode = () => {
   return IS_STORE_UNDER_MAINTENANCE;
 };
 
-export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin }) {
+export default function IoTPage({ 
+  onBackToGateway, 
+  onSwitchToWeb, 
+  onOpenAdmin,
+  activeTab: propActiveTab = 'store',
+  onTabChange
+}) {
   const isMaintenanceActive = checkMaintenanceMode();
   // Navigation tabs: 'store' (Hardware Store) | 'about' (About Us) | 'contracts' (Bulk Stock & Custom Projects) | 'delivery' | 'policies' | 'faq'
-  const [activeTab, setActiveTab] = useState('store');
+  const [internalTab, setInternalTab] = useState(propActiveTab);
+  const activeTab = propActiveTab || internalTab;
+
+  useEffect(() => {
+    if (propActiveTab && propActiveTab !== internalTab) {
+      setInternalTab(propActiveTab);
+    }
+  }, [propActiveTab]);
+
+  const setActiveTab = (tab) => {
+    setInternalTab(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
 
   // Currency State: 'LKR' | 'USD' (Powered by Live Real-Time Forex Rate)
   const [currency, setCurrency] = useState('LKR');
@@ -3064,17 +3084,20 @@ xTaskCreatePinnedToCore(
               <a href="https://wa.me/94717790035" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="WhatsApp">
                 <i className="bi bi-whatsapp"></i>
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="LinkedIn">
-                <i className="bi bi-linkedin"></i>
+              <a href="https://www.tiktok.com/@buildifysolutionz?_r=1&_t=ZS-9A0KI77yMMu" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="TikTok">
+                <i className="bi bi-tiktok"></i>
+              </a>
+              <a href="https://www.instagram.com/buildifysolutionz?stkn=MTRramsxb2F5OTVxbA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="Instagram">
+                <i className="bi bi-instagram"></i>
+              </a>
+              <a href="https://x.com/Buildifyz" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="Twitter X">
+                <i className="bi bi-twitter-x"></i>
               </a>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="Facebook">
                 <i className="bi bi-facebook"></i>
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="Instagram">
-                <i className="bi bi-instagram"></i>
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="Twitter X">
-                <i className="bi bi-twitter-x"></i>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="LinkedIn">
+                <i className="bi bi-linkedin"></i>
               </a>
               <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="social-glass-btn iot-social-btn" title="GitHub">
                 <i className="bi bi-github"></i>

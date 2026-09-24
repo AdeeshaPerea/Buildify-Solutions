@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- 1. Home / Gateway -->
   <url>
     <loc>https://www.buildifysolution.com/</loc>
     <lastmod>2026-09-24</lastmod>
@@ -11,8 +12,22 @@
       <image:title>Buildify Solutions - Web Development, Custom Software &amp; Smart IoT</image:title>
     </image:image>
   </url>
+
+  <!-- 2. Smart IoT Hardware Store -->
   <url>
-    <loc>https://www.buildifysolution.com/?portal=web</loc>
+    <loc>https://www.buildifysolution.com/store</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://www.buildifysolution.com/og-image.png</image:loc>
+      <image:title>Smart IoT, Robotics &amp; Hardware Store - Buildify Solutions</image:title>
+    </image:image>
+  </url>
+
+  <!-- 3. Web Development & Software Studio -->
+  <url>
+    <loc>https://www.buildifysolution.com/web</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -21,14 +36,44 @@
       <image:title>Web Development &amp; Custom Software Studio - Buildify Solutions</image:title>
     </image:image>
   </url>
+
+  <!-- 4. About Us -->
   <url>
-    <loc>https://www.buildifysolution.com/?portal=iot</loc>
+    <loc>https://www.buildifysolution.com/about</loc>
     <lastmod>2026-09-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-    <image:image>
-      <image:loc>https://www.buildifysolution.com/og-image.png</image:loc>
-      <image:title>Smart IoT, Robotics &amp; Hardware Store - Buildify Solutions</image:title>
-    </image:image>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 5. Bulk Stock & Custom Contracts -->
+  <url>
+    <loc>https://www.buildifysolution.com/contracts</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 6. Islandwide Delivery & Courier Calculator -->
+  <url>
+    <loc>https://www.buildifysolution.com/delivery</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <!-- 7. Store Policies & Warranty -->
+  <url>
+    <loc>https://www.buildifysolution.com/policies</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- 8. Frequently Asked Questions (FAQ) -->
+  <url>
+    <loc>https://www.buildifysolution.com/faq</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
   </url>
 </urlset>
