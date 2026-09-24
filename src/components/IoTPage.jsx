@@ -106,7 +106,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
   // Video / Canvas Lab State
   const [isPlayingVideo, setIsPlayingVideo] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
-  const [videoFps, setVideoFps] = useState(60);
+  const fpsReadoutRef = useRef(null);
   const canvasRef = useRef(null);
 
   // Bulk / Custom Contract Estimator State
@@ -398,13 +398,14 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
     window.open(`https://wa.me/94717790035?text=${text}`, '_blank');
   };
 
-  // Futuristic Canvas Animation for Video Lab Theater
+  // High-Performance Hardware-Accelerated Canvas Animation for Video Lab Theater
   useEffect(() => {
     if (activeTab !== 'about') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
+    let isVisible = true;
     let width = (canvas.width = canvas.offsetWidth);
     let height = (canvas.height = canvas.offsetHeight);
 
@@ -415,13 +416,23 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
     };
     window.addEventListener('resize', handleResize);
 
+    // Pause animation when scrolled off-screen to save 100% GPU / CPU
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      if (isVisible && !animationFrameId) {
+        lastTime = performance.now();
+        animationFrameId = requestAnimationFrame(render);
+      }
+    }, { threshold: 0.1 });
+    observer.observe(canvas);
+
     // Simulated animated circuit trace particles
-    const nodes = Array.from({ length: 35 }, () => ({
+    const nodes = Array.from({ length: 30 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
       vx: (Math.random() - 0.5) * 1.5,
       vy: (Math.random() - 0.5) * 1.5,
-      size: Math.random() * 3 + 2,
+      size: Math.random() * 2.5 + 2,
       pulse: Math.random() * Math.PI
     }));
 
@@ -429,9 +440,16 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
     let lastTime = performance.now();
 
     const render = (time) => {
+      if (!isVisible) {
+        animationFrameId = null;
+        return;
+      }
+
       frameCount++;
       if (time - lastTime >= 1000) {
-        setVideoFps(frameCount);
+        if (fpsReadoutRef.current) {
+          fpsReadoutRef.current.textContent = frameCount;
+        }
         frameCount = 0;
         lastTime = time;
       }
@@ -442,19 +460,17 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
       // Draw Grid
       ctx.strokeStyle = 'rgba(255, 107, 0, 0.05)';
       ctx.lineWidth = 1;
-      const gridSize = 40;
+      const gridSize = 45;
+      ctx.beginPath();
       for (let x = 0; x < width; x += gridSize) {
-        ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
-        ctx.stroke();
       }
       for (let y = 0; y < height; y += gridSize) {
-        ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
-        ctx.stroke();
       }
+      ctx.stroke();
 
       // Draw Nodes and Connecting Traces
       nodes.forEach((node, i) => {
@@ -470,8 +486,8 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
         for (let j = i + 1; j < nodes.length; j++) {
           const other = nodes[j];
           const dist = Math.hypot(node.x - other.x, node.y - other.y);
-          if (dist < 130) {
-            ctx.strokeStyle = `rgba(255, 133, 27, ${1 - dist / 130})`;
+          if (dist < 120) {
+            ctx.strokeStyle = `rgba(255, 133, 27, ${1 - dist / 120})`;
             ctx.lineWidth = 1.2;
             ctx.beginPath();
             ctx.moveTo(node.x, node.y);
@@ -480,15 +496,17 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
           }
         }
 
-        // Draw glow node
-        const glow = Math.sin(node.pulse) * 2 + 3;
+        // Draw glow node using fast native GPU alpha blending (no expensive shadowBlur fallback)
+        const glow = Math.sin(node.pulse) * 1.5 + 2.5;
+        ctx.fillStyle = 'rgba(255, 107, 0, 0.25)';
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size + glow + 2, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.fillStyle = '#ffaa00';
-        ctx.shadowColor = '#ff6b00';
-        ctx.shadowBlur = 12;
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.size + glow * 0.4, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
       });
 
       // Draw Center IC Processor Core Hologram
@@ -507,7 +525,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
       ctx.textAlign = 'center';
       ctx.fillText('BUILDIFY IoT CORE', cx, cy - 8);
       ctx.fillText('ESP32 / LoRaWAN', cx, cy + 12);
-      ctx.fillText(`TELEMETRY: ACTIVE`, cx, cy + 28);
+      ctx.fillText('TELEMETRY: ACTIVE', cx, cy + 28);
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -516,7 +534,8 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [activeTab, isPlayingVideo]);
 
@@ -1250,7 +1269,7 @@ export default function IoTPage({ onBackToGateway, onSwitchToWeb, onOpenAdmin })
                       <span>AI ROBOTIC WORKCELL // FEED: SMT COMPONENT REFLOW & LASER TEST</span>
                     </div>
                     <div className="hud-fps-readout">
-                      {videoFps} FPS | 8K AI Telemetry
+                      <span ref={fpsReadoutRef}>60</span> FPS | 8K AI Telemetry
                     </div>
                   </div>
 

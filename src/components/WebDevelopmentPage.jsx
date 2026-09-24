@@ -70,13 +70,46 @@ const FAQ_ITEMS = [
   }
 ];
 
-export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
-  // Typewriter text animation state
+const TypewriterHeadline = React.memo(function TypewriterHeadline() {
   const [textIndex, setTextIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(120);
 
+  useEffect(() => {
+    const currentPhrase = ROTATING_PHRASES[textIndex];
+    let timer;
+
+    if (!isDeleting) {
+      if (displayedText.length < currentPhrase.length) {
+        timer = setTimeout(() => {
+          setDisplayedText(currentPhrase.substring(0, displayedText.length + 1));
+        }, typingSpeed);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+          setTypingSpeed(60);
+        }, 1800);
+      }
+    } else {
+      if (displayedText.length > 0) {
+        timer = setTimeout(() => {
+          setDisplayedText(currentPhrase.substring(0, displayedText.length - 1));
+        }, typingSpeed);
+      } else {
+        setIsDeleting(false);
+        setTypingSpeed(110);
+        setTextIndex((prev) => (prev + 1) % ROTATING_PHRASES.length);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayedText, isDeleting, textIndex, typingSpeed]);
+
+  return <span className="typewriter-dynamic-word">{displayedText}</span>;
+});
+
+export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
   // Active mockup preview tab ('inventory' | 'telemetry' | 'ecommerce')
   const [mockupTab, setMockupTab] = useState('inventory');
 
@@ -118,37 +151,6 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
   });
   const [quoteSubmitted, setQuoteSubmitted] = useState(false);
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
-
-  // Typewriter effect loop
-  useEffect(() => {
-    const currentPhrase = ROTATING_PHRASES[textIndex];
-    let timer;
-
-    if (!isDeleting) {
-      if (displayedText.length < currentPhrase.length) {
-        timer = setTimeout(() => {
-          setDisplayedText(currentPhrase.substring(0, displayedText.length + 1));
-        }, typingSpeed);
-      } else {
-        timer = setTimeout(() => {
-          setIsDeleting(true);
-          setTypingSpeed(60);
-        }, 1800);
-      }
-    } else {
-      if (displayedText.length > 0) {
-        timer = setTimeout(() => {
-          setDisplayedText(currentPhrase.substring(0, displayedText.length - 1));
-        }, typingSpeed);
-      } else {
-        setIsDeleting(false);
-        setTypingSpeed(110);
-        setTextIndex((prev) => (prev + 1) % ROTATING_PHRASES.length);
-      }
-    }
-
-    return () => clearTimeout(timer);
-  }, [displayedText, isDeleting, textIndex, typingSpeed]);
 
   // Project Estimator Base Plans (Starting at Rs. 25,000 for non-functional/static UI)
   const baseEstimates = {
@@ -412,7 +414,7 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
             </div>
 
             <h1 className="web-hero-headline">
-              We Build <span className="typewriter-dynamic-word">{displayedText}</span>
+              We Build <TypewriterHeadline />
               <span className="typewriter-cursor">|</span> That Drive Real Results
             </h1>
 
