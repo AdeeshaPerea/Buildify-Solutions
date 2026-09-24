@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Favicons and assets must be explicitly crawlable for Google Search Favicon indexing
+Allow: /favicon.ico
+Allow: /favicon.svg
+Allow: /favicon-48x48.png
+Allow: /favicon-96x96.png
+Allow: /icon-192.png
+Allow: /apple-touch-icon.png
+Allow: /og-image.png
+
+# Disallow internal admin endpoints from crawling
+Disallow: /admin
+Disallow: /#admin
+
+Sitemap: https://www.buildifysolution.com/sitemap.xml

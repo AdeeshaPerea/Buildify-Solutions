@@ -54,8 +54,8 @@ export default function App() {
   useEffect(() => {
     const portalMetadata = {
       gateway: {
-        title: 'Buildify Solutions | Web Development, Custom Software, Smart IoT & Robotics',
-        description: 'Buildify Solutions delivers full-stack web development, custom software engineering, business ERP systems, and cutting-edge IoT & robotics solutions. WE BUILD. YOU GROW.'
+        title: 'Buildify Solutions | Web Development, Software & Smart IoT',
+        description: 'Buildify Solutions delivers full-stack web development, custom software, ERP systems, and smart IoT & robotics solutions. WE BUILD. YOU GROW.'
       },
       web: {
         title: 'Web Development & Custom Software Studio | Buildify Solutions',

@@ -12,7 +12,7 @@ export const BUILDIFY_DATA = {
     email: "buildifysoluition@gmail.com",
     phone: "071 7790035",
     internationalPhone: "+94 71 7790035",
-    website: "buildifysolutions.lk",
+    website: "www.buildifysolution.com",
     location: "Wewalduwa, Tyre Junction, Kelaniya, Sri Lanka",
     workingHours: "Mon - Sat: 8:30 AM - 7:00 PM (IST)",
     get exchangeRateLKR() {

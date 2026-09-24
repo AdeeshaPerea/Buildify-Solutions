@@ -491,7 +491,7 @@ export default function WebDevelopmentPage({ onBackToGateway, onSwitchToIoT }) {
                   </div>
                   <div className="browser-address">
                     <Lock size={11} className="addr-lock" />
-                    <span>https://app.buildifysolutions.lk/portal</span>
+                    <span>https://app.buildifysolution.com/portal</span>
                   </div>
                   <div className="browser-status">
                     <span className="status-indicator-dot"></span> Online
