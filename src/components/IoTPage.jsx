@@ -43,6 +43,8 @@ import {
   Maximize2,
   HelpCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Check,
   Calculator,
@@ -118,6 +120,16 @@ export default function IoTPage({
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [activeModalProduct, setActiveModalProduct] = useState(null);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
+  // Store Catalog Pagination (9 items per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
+  const catalogTopRef = useRef(null);
+
+  // Reset to first page whenever search query or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedBrand, selectedVoltage, inStockOnly, onlyDiscounted]);
 
   // Cart Drawer State
   const [cart, setCart] = useState([]);
@@ -342,6 +354,45 @@ export default function IoTPage({
       return true;
     });
   }, [allProducts, searchQuery, selectedCategory, selectedBrand, selectedVoltage, inStockOnly, onlyDiscounted]);
+
+  // Calculate total pages for 9 items per page
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+
+  // Auto-clamp currentPage if filtered list size changes
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  // Sliced products for current page (exact 9 items per page)
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  // Page change handler with smooth scroll to top of store catalog
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+    setCurrentPage(newPage);
+    if (catalogTopRef.current) {
+      catalogTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Helper function to generate clean pagination items with ellipsis
+  const getPageNumbers = (current, total) => {
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    if (current <= 4) {
+      return [1, 2, 3, 4, 5, '...', total];
+    }
+    if (current >= total - 3) {
+      return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+    }
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
 
   // Flash Sale / Discounted Products for Highlight Carousel
   const flashSaleProducts = useMemo(() => {
@@ -1013,10 +1064,19 @@ export default function IoTPage({
               </aside>
 
               {/* RIGHT: Products Grid & Search Status */}
-              <div className="store-products-main">
+              <div className="store-products-main" ref={catalogTopRef}>
                 <div className="products-results-bar">
                   <div className="results-count">
-                    Showing <strong>{filteredProducts.length}</strong> IoT hardware items
+                    {filteredProducts.length === 0 ? (
+                      <span>Showing <strong>0</strong> IoT hardware items</span>
+                    ) : (
+                      <span>
+                        Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</strong> of <strong>{filteredProducts.length}</strong> IoT hardware items
+                        {totalPages > 1 && (
+                          <span className="results-page-tag">Page {currentPage} of {totalPages}</span>
+                        )}
+                      </span>
+                    )}
                   </div>
 
                   <div className="active-filter-tags">
@@ -1052,6 +1112,8 @@ export default function IoTPage({
                         setSelectedVoltage('All');
                         setSearchQuery('');
                         setInStockOnly(false);
+                        setOnlyDiscounted(false);
+                        setCurrentPage(1);
                       }}
                     >
                       Show All Hardware
@@ -1059,7 +1121,7 @@ export default function IoTPage({
                   </div>
                 ) : (
                   <div className="catalog-products-grid">
-                    {filteredProducts.map((product) => {
+                    {paginatedProducts.map((product) => {
                       const hasDiscount = product.originalPriceLKR && product.originalPriceLKR > product.priceLKR;
                       const discountPct = hasDiscount
                         ? Math.round(((product.originalPriceLKR - product.priceLKR) / product.originalPriceLKR) * 100)
@@ -1128,6 +1190,65 @@ export default function IoTPage({
                         </div>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* Pagination Controls - 9 items per page */}
+                {filteredProducts.length > 0 && totalPages > 1 && (
+                  <div className="store-pagination-wrapper">
+                    <div className="pagination-info-text">
+                      Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}</strong>–<strong>{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</strong> of <strong>{filteredProducts.length}</strong> products (9 per page)
+                    </div>
+
+                    <div className="pagination-buttons-cluster">
+                      <button
+                        type="button"
+                        className="pagination-nav-button prev-btn"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        title="Previous Page"
+                        aria-label="Previous Page"
+                      >
+                        <ChevronLeft size={16} />
+                        <span>Prev</span>
+                      </button>
+
+                      <div className="pagination-num-pills">
+                        {getPageNumbers(currentPage, totalPages).map((p, idx) => {
+                          if (p === '...') {
+                            return (
+                              <span key={`ellipsis-${idx}`} className="pagination-ellipsis-pill">
+                                •••
+                              </span>
+                            );
+                          }
+                          return (
+                            <button
+                              key={p}
+                              type="button"
+                              className={`pagination-num-button ${currentPage === p ? 'active' : ''}`}
+                              onClick={() => handlePageChange(p)}
+                              aria-label={`Page ${p}`}
+                              aria-current={currentPage === p ? 'page' : undefined}
+                            >
+                              {p}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="pagination-nav-button next-btn"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        title="Next Page"
+                        aria-label="Next Page"
+                      >
+                        <span>Next</span>
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
